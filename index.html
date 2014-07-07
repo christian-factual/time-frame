@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+
+<head>
+	<link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+	<!-- <link rel="stylesheet" type="text/css" href="./css/bootstrap-theme.min.css"> -->
+	<link rel="stylesheet" type="text/css" href="./css/index.css">
+	<script type="text/javascript" src="./js/d3.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+</head>
+
+<body ng-app="commitViz"  ng-controller="pageCtrl">
+	<div id="headerContainer">
+		<div id="title"> 
+			<h1>Commit Visualization</h1>
+		</div>
+		<hr>
+		<div id="subHeaderContainer">
+			<div class="row">
+				<!-- <h4 id="commitID"class="col-md-5">
+					H4sIAAAAAAAAAA3HyxECQQgA0Yim-AwwEIIBGABgjV50D-7B8N0-vKoGdIPzd3u-7xDo9JA9R7fzEKw5siKHLHZvUzZEIHBE6ZYy5nBfnFWJ6lHlvnk1fI7xOr4n4BUBCbJRsMklrGm0qVQ1S7OtQ68Lw8UihvMP-2NSlJAAAAA
+				</h4>  -->
+<!-- 				<h4 id="commitID"class="col-md-5">
+					{{}}
+				</h4>  -->
+				<!-- Will need to use Angular to make this update whenever the or static whenever the commit ID is input tin the input field.-->
+				<div class="input-group col-md-5 col-md-offset-7">
+					<input type="text" placeholder="Commit_ID" class="form-control" ng-model="inputID">
+					<span class="input-group-btn">
+						<button class="btn btn-default"type="button" ng-click="getJSON()">
+							<span class="glyphicon glyphicon-stats"></span>
+						</button>
+					</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<br>
+	<div id="mainContainer" class="container-fluid">
+		<h5 style="float:left">Attribute Summarizers</h5>
+		<div id="menuBar" class="row" ng-model='activeTab'>
+			<div class="btn-group btn-group-justified">
+				<div class="btn-group" ng-repeat="attrib in mainAttribs">
+					<button type="button" class="btn btn-default" value="{{attrib}}" ng-click="selectAttrib($event)">{{attrib}}</button>
+				</div>
+				<div class="btn-group">
+					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+						More Fields
+						<span class="caret"></span>
+					</button>
+					<ul id="menuBarDropdown" class="dropdown-menu">
+						<li>
+							<div id="menuBarDropdownContainer"class="dropdown-menu btn-group btn-group-vertical" ng-repeat="attrib in otherAttribs">
+								<button type="button" class="btn btn-default" value="{{attrib}}" ng-click="selectAttrib($event)">{{attrib}}</button>
+							</div>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div id="YextIndicator" class="row" ng-show="tableInfo.hasOwnProperty('yext_id')">
+			<div class="col-md-3 col-md-offset-10">
+				<div class="alert alert-info" style="position:absolute"> Yext Powered Listing</div>
+			</div>
+		</div>
+
+		<div id="topContainer">
+			<div id="topContent">
+				<div>
+				<label>Chart Types</label>
+				<select ng-model='chartType'>
+					<option value="pie">Pie</option>
+					<option value="sBar">Bar</option>
+				</select>
+			</div>
+				<label>Commit Attribute Weights: {{activeTab}}</label>
+				<div id="chart">
+					<!-- First chart Pie-->
+					<div ac-chart="chartType" ac-data="data" ac-config="config" id='chart' class='chart' ng-show="chartType==='pie'"></div>
+					<!-- This is the second chart -->
+					<div ac-chart="chartType" ac-data="data" ac-config="config" id='chart' class='chart' ng-show="chartType==='sBar'"></div>
+				</div>
+			</div>
+		</div>
+		<br>
+		<div id="midContainer">
+			<div id="midContent" style="padding:20px;">
+				<p>User Input: <b>{{userInput}}</b></p>
+				<p>Explanation: <b>{{explain}}</b></p>
+				<br>
+				<p>Largest Weight: <b>{{highestW}}</b></p>
+				<p>Total Weight: <b>{{totalW}}</b></p>
+				<p>Confidence: <b>{{confidence}}</b></p>
+			</div>		
+		</div>
+		<div id="bottomContainer">
+			<div id="bottomContent" >
+				<h5>Attribute Progression</h5>
+				<table id="progress" class="table table-bordered table-striped table-condensed">
+					<thead>
+						<tr>
+							<th class="col-md-3">Attribute</th>
+							<th class="col-md-3">Raw Input</th>
+							<th class="col-md-3">Cleaned Input</th>
+							<th class="col-md-3">Summary</th>
+						</tr>
+					</thead>
+					<tbody id="summaryTable">
+						<tr ng-repeat="(key, value) in tableInfo">
+							<td>{{key|splitCap}}</td>
+							<td>{{value[0]}}</td>
+							<td>{{value[1]}}</td>
+							<td>{{value[2]}}</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	<div id="random">
+		<!-- this is the directive -->
+		<timeline-D3></timeline-D3>
+	</div>
+	<!-- Loading in all the JS files: angular, D3, jQuery-->
+	<script type="text/javascript" src="./js/angular.min.js"></script>
+	<script type="text/javascript" src="./js/angular-charts.js"></script>
+	<script type="text/javascript" src="./js/underscore.min.js"></script>
+	<script type="text/javascript" src="./js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="./js/main.js"></script>
+</body>
+
+</html>
