@@ -81,7 +81,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		**/
 		var makeURLs= function(){
 			inputsReadURL = baseURL + 'inputReads/' + _UUID;
-			sumReportURL = baseURL + 'summaryReports/' + _UUID;
+			sumReportURL = baseURL + 'summaryReports/' + _UUID + '.json';
 			console.log("These are the two URLs: ", inputsReadURL, " and ", sumReportURL);
 		}
 
@@ -116,8 +116,10 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			$q.all(calls)
 			  .then(
 			  	function(results){
+			  		console.log(results);
 			  		deferred.resolve(
-			  			console.log("Success! ", results)
+			  			console.log("Success! ", results);
+			  			
 						// callback(status, data);
 			  		)
 			  	},
@@ -128,7 +130,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			  	function(updates){
 			  		deferred.update(updates);
 			  	});
-			  console.log(deferred.promise);
 			  return deferred.promise	
 		}
 	})
