@@ -102,26 +102,35 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		* Function to make http call to the the server.
 		* inputs: url = string of desired UUID
 		*		  callback = function that will be called when call returns
+		* Returns:
 		**/
-		this.callDSApi = function(){
+		this.callDSApi = function(url, callback){
 			// this.setUUID(url);
 			makeURLs();
-
 			var deferred = $q.defer();
 			var calls = [
 				$http.get(sumReportURL),
-				$http.get(inputsReadURL)
+				$http({
+					method: 'GET',
+					url: inputsReadURL,
+					transformResponse: function(data){
+						var splitArr = data.split("\n");
+						splitArr.pop(); //remove extra value
+						splitArr = _.map(splitArr, function(obj){
+							return JSON.parse(obj);
+						});
+						return splitArr;
+					}
+					})
 			];
 			console.log(calls);
 			$q.all(calls)
 			  .then(
 			  	function(results){
-			  		console.log(results);
-			  		deferred.resolve(
-			  			console.log("Success! ", results);
-			  			
-						// callback(status, data);
-			  		)
+			  		console.log("These are the results: ", results);
+			  		//Here make the callback function
+			  		// callback(results);
+			  		deferred.resolve(results);
 			  	},
 			  	function(errors){
 			  		console.log("Something wrong happened: ", errors)
@@ -130,6 +139,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			  	function(updates){
 			  		deferred.update(updates);
 			  	});
+			  console.log("this is the deferred.promise");
 			  return deferred.promise	
 		}
 	})
