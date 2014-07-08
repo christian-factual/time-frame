@@ -1,6 +1,3 @@
-//Making a static list of all the attributes
-
-var commitID = "H4sIAAAAAAAAAA3HyxECQQgA0Yim-AwwEIIBGABgjV50D-7B8N0-vKoGdIPzd3u-7xDo9JA9R7fzEKw5siKHLHZvUzZEIHBE6ZYy5nBfnFWJ6lHlvnk1fI7xOr4n4BUBCbJRsMklrGm0qVQ1S7OtQ68Lw8UihvMP-2NSlJAAAAA";
 var other = {};
 
 var timeframeModule = angular.module('timeframe',['angularCharts'])
@@ -20,8 +17,10 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			return out;
 		};
 	})
-	.service('dsApiService', function(inputReportCleaner, $http){
+	.service('commitIDapiService', function(inputReportCleaner, $http){
 		//This is where I'm making the JSON call to DSAPIs
+
+		//These vars are used to make the commit ID ds api calls. 
 		var baseURL = 'http://localhost:8888/resources/';
 		var _commitID= 'peets_input_report.json'; //****This will be an input later
 		var _finalURL = '';
@@ -66,6 +65,71 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				console.log("This crap didnt work");
 				alert("Wasn't able to find this commit ID");
 			})	
+		}
+	})
+	.service('UUIDapiService', function(inputReportCleaner, $http, $q){		
+		//These vars are used to make the commit ID ds api calls. 
+		var baseURL = 'http://localhost:8888/store/';
+		var _UUID = 'test'; //****This will be an input later
+		var inputsReadURL = '';
+		var sumReportURL = '';
+		
+		/** 
+		* Method combines the final URL from user input
+		* and the base URL. 
+		* Returns: array of URLs 
+		**/
+		var makeURLs= function(){
+			inputsReadURL = baseURL + 'inputReads/' + _UUID;
+			sumReportURL = baseURL + 'summaryReports/' + _UUID;
+			console.log("These are the two URLs: ", inputsReadURL, " and ", sumReportURL);
+		}
+
+		/** 
+		* Setter for the UUID variable
+		* Input: String ID 
+		**/
+		this.setUUID = function(ID){
+			if(ID == ''){
+				_UUID= 'test';
+			}
+			else{
+				_UUID = ID;
+			}
+		}
+
+		/** 
+		* Function to make http call to the the server.
+		* inputs: url = string of desired UUID
+		*		  callback = function that will be called when call returns
+		**/
+		this.callDSApi = function(){
+			// this.setUUID(url);
+			makeURLs();
+
+			var deferred = $q.defer();
+			var calls = [
+				$http.get(sumReportURL),
+				$http.get(inputsReadURL)
+			];
+			console.log(calls);
+			$q.all(calls)
+			  .then(
+			  	function(results){
+			  		deferred.resolve(
+			  			console.log("Success! ", results)
+						// callback(status, data);
+			  		)
+			  	},
+			  	function(errors){
+			  		console.log("Something wrong happened: ", errors)
+			  		deferred.reject(errors);
+			  	},
+			  	function(updates){
+			  		deferred.update(updates);
+			  	});
+			  console.log(deferred.promise);
+			  return deferred.promise	
 		}
 	})
 	.service('inputReportCleaner', function(){
@@ -188,7 +252,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			return text;
 		}
 	})
-	.controller('pageCtrl', function($scope, attArrays, dsApiService, inputReportCleaner){
+	.controller('pageCtrl', function($scope, attArrays, commitIDapiService, UUIDapiService, inputReportCleaner){
 		//vars
 		$scope.inputID = '';
 		$scope.tableInfo = {};
@@ -202,7 +266,20 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		$scope.mainAttribs = attArrays.main;
 		$scope.otherAttribs = attArrays.other;
 		//Logic for choosing active tabs
-		$scope.activeTab = 'Name';
+		$scope.activeTab = 'Name';			
+		//type of chart
+		$scope.chartType = 'pie';
+		//scope.data information that is set.
+		$scope.data = {}; //Data for the pie
+
+		//*************************
+		//temp function
+		$scope.makeQcall = function(){
+			UUIDapiService.callDSApi();
+
+		}
+
+		//*************************
 
 		//Method is called when the attribute toggle on the html page
 		//is clicked. This updates the page to the attribute and calls 
@@ -233,8 +310,8 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		//function needed to get the JSON file from the server
 		//Also calls methods to set variables used in html
 		$scope.getJSON = function(){
-			//dsApiService.callDSApi($scope.inputID);
-			dsApiService.callDSApi($scope.inputID, function(error, returnJSON){
+			//commitIDapiService.callDSApi($scope.inputID);
+			commitIDapiService.callDSApi($scope.inputID, function(error, returnJSON){
 			//set table info
 			other = returnJSON;
 			$scope.tableInfo = inputReportCleaner.generateTableInfo();
@@ -244,12 +321,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			$scope.assignContentText(inputReportCleaner.generateContentText($scope.activeTab));
 			});
 		};
-
-		//details for the angular charts instatiation
-		//type of chart
-		$scope.chartType = 'pie';
-		//scope.data information that is set.
-		$scope.data = {}; //Data for the pie
 	});
 
 timeframeModule.directive('timelineD3', [

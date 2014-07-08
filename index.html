@@ -12,7 +12,7 @@
 <body ng-app="timeframe"  ng-controller="pageCtrl">
 	<div id="headerContainer">
 		<div id="title"> 
-			<h1>Commit Visualization</h1>
+			<h1>Time Frame Visualization</h1>
 		</div>
 		<hr>
 		<div id="subHeaderContainer">
@@ -29,6 +29,7 @@
 		</div>
 	</div>
 	<br>
+	<button type="button" ng-click="makeQcall()">Q Call Button</button>
 	<div id="mainContainer" class="container-fluid">
 		<h5 style="float:left">Attribute Summarizers</h5>
 		<div id="menuBar" class="row" ng-model='activeTab'>
