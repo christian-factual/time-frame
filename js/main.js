@@ -3,7 +3,7 @@
 var commitID = "H4sIAAAAAAAAAA3HyxECQQgA0Yim-AwwEIIBGABgjV50D-7B8N0-vKoGdIPzd3u-7xDo9JA9R7fzEKw5siKHLHZvUzZEIHBE6ZYy5nBfnFWJ6lHlvnk1fI7xOr4n4BUBCbJRsMklrGm0qVQ1S7OtQ68Lw8UihvMP-2NSlJAAAAA";
 var other = {};
 
-var commitVizModule = angular.module('commitViz',['angularCharts'])
+var timeframeModule = angular.module('timeframe',['angularCharts'])
 	.value('attArrays', {
 		'main': ['Name', 'Tel', 'Address', 'Locality', 'Region'], //, 'Geocode'
 		'other': ['Postcode', 'Country', 'Website'] //, 'Category ID'
@@ -72,6 +72,11 @@ var commitVizModule = angular.module('commitViz',['angularCharts'])
 		//vars used.
 		var inputReport = {};
 		var chartInfo = {};
+
+		//Second pass UUID Call storage
+		var summaryReport = {};
+
+
 
 		//Method takes in a data instance, which is the JSON returned from the http
 		//call and assigns it to the inputReport variable of this service.
@@ -245,10 +250,9 @@ var commitVizModule = angular.module('commitViz',['angularCharts'])
 		$scope.chartType = 'pie';
 		//scope.data information that is set.
 		$scope.data = {}; //Data for the pie
-		$scope.data2 = {}; //data for the bar
 	});
 
-commitVizModule.directive('timelineD3', [
+timeframeModule.directive('timelineD3', [
 	'$window',
 	function ($window) {
 		return {
@@ -321,7 +325,7 @@ commitVizModule.directive('timelineD3', [
 			        colorPropertyName = null,
 			        beginning = 0,
 			        ending = 0,
-			        margin = {top: 20, right: 40, bottom: 30, left: 50},
+			        margin = {top: 20, right: 70, bottom: 30, left: 50},
 			        itemHeight = 20,
 			        itemMargin = 5,
 			        showTodayLine = false,
@@ -552,7 +556,7 @@ commitVizModule.directive('timelineD3', [
 ]);
 
 //random graph example. This is just to show the formatting of the code 
-commitVizModule.directive('otherthing', [
+timeframeModule.directive('otherthing', [
 	function () {
 		return {
 			restrict: 'E', 
