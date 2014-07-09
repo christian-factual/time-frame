@@ -67,91 +67,10 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			})	
 		}
 	})
-	.service('UUIDapiService', function(inputReportCleaner, $http, $q){		
-		//These vars are used to make the commit ID ds api calls. 
-		var baseURL = 'http://localhost:8888/store/';
-		var _UUID = 'test'; //****This will be an input later
-		var inputsReadURL = '';
-		var sumReportURL = '';
-		
-		/** 
-		* Method combines the final URL from user input
-		* and the base URL. 
-		* Returns: array of URLs 
-		**/
-		var makeURLs= function(){
-			inputsReadURL = baseURL + 'inputReads/' + _UUID;
-			sumReportURL = baseURL + 'summaryReports/' + _UUID + '.json';
-			console.log("These are the two URLs: ", inputsReadURL, " and ", sumReportURL);
-		}
-
-		/** 
-		* Setter for the UUID variable
-		* Input: String ID 
-		**/
-		this.setUUID = function(ID){
-			if(ID == ''){
-				_UUID= 'test';
-			}
-			else{
-				_UUID = ID;
-			}
-		}
-
-		/** 
-		* Function to make http call to the the server.
-		* inputs: url = string of desired UUID
-		*		  callback = function that will be called when call returns
-		* Returns:
-		**/
-		this.callDSApi = function(url, callback){
-			// this.setUUID(url);
-			makeURLs();
-			var deferred = $q.defer();
-			var calls = [
-				$http.get(sumReportURL),
-				$http({
-					method: 'GET',
-					url: inputsReadURL,
-					transformResponse: function(data){
-						var splitArr = data.split("\n");
-						splitArr.pop(); //remove extra value
-						splitArr = _.map(splitArr, function(obj){
-							return JSON.parse(obj);
-						});
-						return splitArr;
-					}
-					})
-			];
-			console.log(calls);
-			$q.all(calls)
-			  .then(
-			  	function(results){
-			  		console.log("These are the results: ", results);
-			  		//Here make the callback function
-			  		// callback(results);
-			  		deferred.resolve(results);
-			  	},
-			  	function(errors){
-			  		console.log("Something wrong happened: ", errors)
-			  		deferred.reject(errors);
-			  	},
-			  	function(updates){
-			  		deferred.update(updates);
-			  	});
-			  console.log("this is the deferred.promise");
-			  return deferred.promise	
-		}
-	})
 	.service('inputReportCleaner', function(){
 		//vars used.
 		var inputReport = {};
 		var chartInfo = {};
-
-		//Second pass UUID Call storage
-		var summaryReport = {};
-
-
 
 		//Method takes in a data instance, which is the JSON returned from the http
 		//call and assigns it to the inputReport variable of this service.
@@ -263,7 +182,175 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			return text;
 		}
 	})
-	.controller('pageCtrl', function($scope, attArrays, commitIDapiService, UUIDapiService, inputReportCleaner){
+	.service('UUIDapiService', function(UUIDCleaner, $http, $q){		
+		//These vars are used to make the commit ID ds api calls. 
+		var baseURL = 'http://localhost:8888/store/';
+		var _UUID = 'test'; //****This will be an input later
+		var inputsReadURL = '';
+		var sumReportURL = '';
+		
+		/** 
+		* Method combines the final URL from user input
+		* and the base URL. 
+		* Returns: array of URLs 
+		**/
+		var makeURLs= function(){
+			inputsReadURL = baseURL + 'inputReads/' + _UUID;
+			sumReportURL = baseURL + 'summaryReports/' + _UUID + '.json';
+			console.log("These are the two URLs: ", inputsReadURL, " and ", sumReportURL);
+		}
+
+		/** 
+		* Setter for the UUID variable
+		* Input: String ID 
+		**/
+		this.setUUID = function(ID){
+			if(ID == ''){
+				_UUID= 'test';
+			}
+			else{
+				_UUID = ID;
+			}
+		}
+
+		/** 
+		* Function to make http call to the the server.
+		* inputs: url = string of desired UUID
+		*		  callback = function that will be called when call returns
+		* Returns:
+		**/
+		this.callDSApi = function(url, callback){
+			// this.setUUID(url);
+			makeURLs();
+			var deferred = $q.defer();
+			var calls = [
+				$http({
+					method: 'GET',
+					url: inputsReadURL,
+					transformResponse: function(data){
+						var splitArr = data.split("\n");
+						splitArr.pop(); //remove extra value
+						splitArr = _.map(splitArr, function(obj){
+							return JSON.parse(obj);
+						});
+						return splitArr;
+					}
+					}),
+				$http.get(sumReportURL)
+			];
+			$q.all(calls)
+			  .then(
+			  	function(results){
+			  		console.log("These are the results: ", results);
+			  		//Here make the callback function
+
+			  		UUIDCleaner.storeReads(results);
+			  		callback(results);
+			  		deferred.resolve(results);
+			  	},
+			  	function(errors){
+			  		console.log("Something wrong happened: ", errors)
+			  		deferred.reject(errors);
+			  	},
+			  	function(updates){
+			  		deferred.update(updates);
+			  	});
+			  console.log("this is the deferred.promise");
+			  return deferred.promise	
+		}
+	})
+	.service('UUIDCleaner', function(){
+		//initialize storage variables
+		var inputReads = {};
+		var summReport = {};
+
+		/*
+		* Method takes in an array of results and saves them
+		* to local variables of the service. From here, other
+		* methods will use the stored values.
+		*/
+		this.storeReads = function(results){
+			inputReads = results[0].data;
+			summReport = results[1].data;
+		}
+
+
+		/*
+		* This method performs black magic and should never be read.
+		*/
+		this.generateTimelineInfo = function(field){
+			//final values
+			var series = [],
+				sources = [],
+				values = [];
+
+			//iterate through all the inputs to find contributions
+			var allInputs = summReport.inputs;
+			for(var key in allInputs){
+				//Check if the input has the field that we want
+				if(_.has(allInputs[key], field)){//Know the object has the field
+					//want to get the md5 begin making the entry
+					var source = '',
+						weight = 0,
+						timeStamp = 0,
+						userPayload = '';
+					//temps variables
+					var md5 = '',
+						filter = {},
+						inputJSON = {};
+					//Use the key to find the source, md5 value & timestamp
+					var keyParts = key.split(",");
+					//pull time stamp; get ts string, split on ':', pull second half
+					timeStamp = parseInt(_.last(keyParts).split(':')[1]);
+					keyParts.pop();//remove time stamp
+					//repeat for the md5value
+					md5 = _.last(keyParts).split(':')[1];
+					keyParts.pop(); //remove md5 string
+					//repeat for source
+					source = _.last(keyParts).split(':')[1];//done; could repeat for user or origin
+					//now have source, ts & md5.
+
+					//use md5 to get input
+					//create criteria for the JSON input
+					filter = {md5: md5, inputDate: timeStamp};
+					//find the entry
+					inputJSON = _.findWhere(inputReads, filter); //should only return 1 JSON
+					if(_.isUndefined(inputJSON)){//something went wrong
+						alert("Entry with this criteria was not found: ", filter)
+						break;
+					}
+					//case that we got the JSON
+					userPayload = inputJSON.payload[field];
+					weight = allInputs[key][field].total_field_weight;
+
+					//now have all the values; need to put together & push onto array
+					series.push(userPayload);
+					sources.push(source);
+					values.push({
+						source: source,
+						input: userPayload,
+						weight: weight,
+						time: timeStamp
+					});
+				}
+				//Does not have the input field
+				else{
+					continue;
+				}
+			}
+			console.log("final array: ", {
+				series: series,
+				sources: sources,
+				values: values
+			});
+			return {
+				series: series,
+				sources: sources,
+				values: values
+			};
+		}
+	})
+	.controller('pageCtrl', function($scope, attArrays, commitIDapiService, UUIDapiService, inputReportCleaner, UUIDCleaner){
 		//vars
 		$scope.inputID = '';
 		$scope.tableInfo = {};
@@ -284,9 +371,16 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		$scope.data = {}; //Data for the pie
 
 		//*************************
+		//temp variable
+		$scope.timeline = {};
+
 		//temp function
 		$scope.makeQcall = function(){
-			UUIDapiService.callDSApi();
+			UUIDapiService.callDSApi($scope.inputID, function(returnJSON){
+				//set timeline info
+				other = returnJSON;
+				$scope.timeline = UUIDCleaner.generateTimelineInfo('tel');
+			});
 
 		}
 
@@ -323,13 +417,13 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		$scope.getJSON = function(){
 			//commitIDapiService.callDSApi($scope.inputID);
 			commitIDapiService.callDSApi($scope.inputID, function(error, returnJSON){
-			//set table info
-			other = returnJSON;
-			$scope.tableInfo = inputReportCleaner.generateTableInfo();
-			//set chart info
-			$scope.data = inputReportCleaner.generateChartInfo($scope.activeTab);
-			//set content
-			$scope.assignContentText(inputReportCleaner.generateContentText($scope.activeTab));
+				//set table info
+				other = returnJSON;
+				$scope.tableInfo = inputReportCleaner.generateTableInfo();
+				//set chart info
+				$scope.data = inputReportCleaner.generateChartInfo($scope.activeTab);
+				//set content
+				$scope.assignContentText(inputReportCleaner.generateContentText($scope.activeTab));
 			});
 		};
 	});
