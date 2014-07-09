@@ -268,6 +268,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		* methods will use the stored values.
 		*/
 		this.storeReads = function(results){
+			other = results;
 			inputReads = results[0].data;
 			summReport = results[1].data;
 		}
@@ -277,6 +278,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		* This method performs black magic and should never be read.
 		*/
 		this.generateTimelineInfo = function(field){
+			console.log("Called generateTimelineInfo with this field: ", field);
 			field = field.toLowerCase();
 			//final values
 			var series = [],
@@ -339,6 +341,12 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			}
 			series = _.uniq(series);
 			sources = _.uniq(sources);
+
+			console.log("Generated JSON: ", {
+				series: series,
+				sources: sources,
+				values: values
+			});
 			return {
 				series: series,
 				sources: sources,
@@ -375,9 +383,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		$scope.makeQcall = function(){
 			UUIDapiService.callDSApi($scope.inputID, function(returnJSON){
 				//set timeline info
-				
 				$scope.timelineInfo = UUIDCleaner.generateTimelineInfo($scope.activeTab);
-				other = $scope.timelineInfo;
 			});
 
 		}
@@ -390,10 +396,12 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		//This method is also called when the page is first loaded.
 		$scope.selectAttrib = function(event){
 			//onclick set the active 
-			$scope.activeTab = event.target.attributes[2].nodeValue
+			$scope.activeTab = event.target.attributes[2].nodeValue;
+			$scope.timelineInfo = UUIDCleaner.generateTimelineInfo($scope.activeTab);
 			try{
 				$scope.data = inputReportCleaner.generateChartInfo($scope.activeTab);
 				$scope.assignContentText(inputReportCleaner.generateContentText($scope.activeTab));
+				$scope.timelineInfo = UUIDCleaner.generateTimelineInfo($scope.activeTab);
 			}
 			catch(err){
 				//probably happening because the info used in the method has not been populated
@@ -743,7 +751,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			    //Watch 'data' and run scope.render(newVal) whenever it changes
         		scope.$watch('timelineInfo', function(){
         			render(scope.timelineInfo);
-        		}, false);  
+        		}, true);  
 
 				})();
 			}
