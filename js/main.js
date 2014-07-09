@@ -338,6 +338,9 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					continue;
 				}
 			}
+			series = _.uniq(series);
+			sources = _.uniq(sources);
+
 			console.log("final array: ", {
 				series: series,
 				sources: sources,
@@ -378,8 +381,9 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		$scope.makeQcall = function(){
 			UUIDapiService.callDSApi($scope.inputID, function(returnJSON){
 				//set timeline info
-				other = returnJSON;
-				$scope.timeline = UUIDCleaner.generateTimelineInfo('tel');
+				
+				$scope.timeline = UUIDCleaner.generateTimelineInfo('name');
+				other = $scope.timeline;
 			});
 
 		}
