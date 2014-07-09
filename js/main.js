@@ -241,7 +241,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			$q.all(calls)
 			  .then(
 			  	function(results){
-			  		console.log("These are the results: ", results);
 			  		//Here make the callback function
 
 			  		UUIDCleaner.storeReads(results);
@@ -249,13 +248,12 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			  		deferred.resolve(results);
 			  	},
 			  	function(errors){
-			  		console.log("Something wrong happened: ", errors)
+			  		alert("Errors while making the AJAX calls");
 			  		deferred.reject(errors);
 			  	},
 			  	function(updates){
 			  		deferred.update(updates);
 			  	});
-			  console.log("this is the deferred.promise");
 			  return deferred.promise	
 		}
 	})
@@ -340,12 +338,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			}
 			series = _.uniq(series);
 			sources = _.uniq(sources);
-
-			console.log("final array: ", {
-				series: series,
-				sources: sources,
-				values: values
-			});
 			return {
 				series: series,
 				sources: sources,
@@ -375,15 +367,15 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 
 		//*************************
 		//temp variable
-		$scope.timeline = {};
+		$scope.timelineInfo = {};
 
 		//temp function
 		$scope.makeQcall = function(){
 			UUIDapiService.callDSApi($scope.inputID, function(returnJSON){
 				//set timeline info
 				
-				$scope.timeline = UUIDCleaner.generateTimelineInfo('name');
-				other = $scope.timeline;
+				$scope.timelineInfo = UUIDCleaner.generateTimelineInfo('tel');
+				other = $scope.timelineInfo;
 			});
 
 		}
@@ -430,17 +422,16 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				$scope.assignContentText(inputReportCleaner.generateContentText($scope.activeTab));
 			});
 		};
-	});
-
-timeframeModule.directive('timelineD3', [
+	})
+	.directive('timelineD3', [
 	'$window',
 	function ($window) {
 		return {
 			restrict: 'E', 
-			scope: {
-				data: '='
-			},
-			link: function(scope, element){
+			// scope: {
+			// 	data: '='
+			// },
+			link: function(scope, element, attrs){
 				(function () {
 
 				//Spare HTML
@@ -486,248 +477,261 @@ timeframeModule.directive('timelineD3', [
 					}]
 				};
 
-				//have this done in the testData generator method
-				testData.values = _.sortBy(testData.values, function(entry){return Math.min(entry.time)});
+				var render = function(data){
+					console.log("render called using data: ", data);
+					var testData = data;
+					//have this done in the testData generator method
+					testData.values = _.sortBy(testData.values, function(entry){return Math.min(entry.time)});
 
-				var hover = function () {},
-			        mouseover = function () {},
-			        mouseout = function () {},
-			        click = function () {},
-			        scroll = function () {},
-			        orient = "bottom",
-			        width = null,
-			        height = null,
-			        tickFormat = { format: d3.time.format("%m/%y"), //%m/%d/%y %H:%M
-			          tickTime: d3.time.month,
-			          tickInterval: 3,
-			          tickSize: 6 },
-			        colorCycle = d3.scale.category20(),
-			        colorPropertyName = null,
-			        beginning = 0,
-			        ending = 0,
-			        margin = {top: 20, right: 70, bottom: 30, left: 50},
-			        itemHeight = 20,
-			        itemMargin = 5,
-			        showTodayLine = false,
-			        showTodayFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle},
-			        showBorderLine = false,
-			        showBorderFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle}
-			      ;
+					var hover = function () {},
+				        mouseover = function () {},
+				        mouseout = function () {},
+				        click = function () {},
+				        scroll = function () {},
+				        orient = "bottom",
+				        width = null,
+				        height = null,
+				        tickFormat = { format: d3.time.format("%m/%y"), //%m/%d/%y %H:%M
+				          tickTime: d3.time.month,
+				          tickInterval: 3,
+				          tickSize: 6 },
+				        colorCycle = d3.scale.category20(),
+				        colorPropertyName = null,
+				        beginning = 0,
+				        ending = 0,
+				        margin = {top: 20, right: 70, bottom: 30, left: 50},
+				        itemHeight = 20,
+				        itemMargin = 5,
+				        showTodayLine = false,
+				        showTodayFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle},
+				        showBorderLine = false,
+				        showBorderFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle}
+				      ;
 
-			    beginning = _.first(testData.values).time -10000000000; //get the beginning time
-			    ending = _.last(testData.values).time + 5000000000;
+				    beginning = _.first(testData.values).time -10000000000; //get the beginning time
+				    ending = _.last(testData.values).time + 5000000000;
 
-			    var w = angular.element($window);
-			    w.bind('resize', function (ev) {
-			    		totalWidth = w.width();
-			    		console.log("Total Width: ", totalWidth);
-			    		totalHeight = element.height();
-			    });
+				    var w = angular.element($window);
+				    w.bind('resize', function (ev) {
+				    		totalWidth = w.width();
+				    		console.log("Total Width: ", totalWidth);
+				    		totalHeight = element.height();
+				    });
 
-				//Set margins, width, and height
-				width = angular.element($window).width() -28 - margin.left - margin.right,
-				height = 400 - margin.top - margin.bottom;
-				var scaleFactor = (1/(ending - beginning)) * (width - margin.left - margin.right);
-				//initialize the item heights
-				assignHeights();
+					//Set margins, width, and height
+					width = angular.element($window).width() -28 - margin.left - margin.right,
+					height = 400 - margin.top - margin.bottom;
+					var scaleFactor = (1/(ending - beginning)) * (width - margin.left - margin.right);
+					//initialize the item heights
+					assignHeights();
 
-        		//Create the d3 element and position it based on margins
-       			var svg = d3.select('#random')
-        			.append("svg")
-        			.attr('width', width + margin.left + margin.right)
-        			.attr('height', height + margin.top + margin.bottom)
-        			.append("g")
-        				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+	        		//Create the d3 element and position it based on margins
+	       			var svg = d3.select('#random')
+	        			.append("svg")
+	        			.attr('width', width + margin.left + margin.right)
+	        			.attr('height', height + margin.top + margin.bottom)
+	        			.append("g")
+	        				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        		//Need scales for the input
-        		var xScale = d3.time.scale()
-						       .domain([beginning, ending])
-						       .range([margin.left, width - margin.right]);
+	        		//Need scales for the input
+	        		var xScale = d3.time.scale()
+							       .domain([beginning, ending])
+							       .range([margin.left, width - margin.right]);
 
-				var xAxis = d3.svg.axis()
-					       	  .scale(xScale)
-					          .orient(orient)
-					          .tickFormat(tickFormat.format)
-					          .ticks(tickFormat.tickTime, tickFormat.tickInterval)
-					          .tickSize(tickFormat.tickSize);
+					var xAxis = d3.svg.axis()
+						       	  .scale(xScale)
+						          .orient(orient)
+						          .tickFormat(tickFormat.format)
+						          .ticks(tickFormat.tickTime, tickFormat.tickInterval)
+						          .tickSize(tickFormat.tickSize);
 
-				//make the pseudo y-axis
-				//Draw the line
- 				// var yAxis = svg.append("line")
-		   //                      .attr("x1", margin.left)
-		   //                      .attr("y1", margin.top)
-		   //                      .attr("x2", margin.left)
-		   //                      .attr("y2", height)
-		   //                      .attr("stroke-width", 1)
-		   //                      .attr("stroke", "black")
-		   //                      .attr("shape-rendering", "crispEdges")
-		   //                      .attr("class", "y axis");
-		        
-		        var ticks = svg.selectAll("tick")
-		        			   .data(testData.series)
-		        			   .enter()
-		        			   .append("line")
-		                       .attr("x1", margin.left)
-		                       .attr("y1", function(d,i){
-		                       		return getYPos(d,i);
-		                       })
-		                       .attr("x2", width - margin.right)
-		                       .attr("y2", function(d,i){
-		                       		return getYPos(d,i);
-		                       })	
-		                       .attr("stroke-width", 1)
-		                       .attr("stroke", "grey");	   
+					//make the pseudo y-axis
+					//Draw the line
+	 				// var yAxis = svg.append("line")
+					   //                      .attr("x1", margin.left)
+					   //                      .attr("y1", margin.top)
+					   //                      .attr("x2", margin.left)
+					   //                      .attr("y2", height)
+					   //                      .attr("stroke-width", 1)
+					   //                      .attr("stroke", "black")
+					   //                      .attr("shape-rendering", "crispEdges")
+					   //                      .attr("class", "y axis");
+			        
+			        var ticks = svg.selectAll("tick")
+			        			   .data(testData.series)
+			        			   .enter()
+			        			   .append("line")
+			                       .attr("x1", margin.left)
+			                       .attr("y1", function(d,i){
+			                       		return getYPos(d,i);
+			                       })
+			                       .attr("x2", width - margin.right)
+			                       .attr("y2", function(d,i){
+			                       		return getYPos(d,i);
+			                       })	
+			                       .attr("stroke-width", 1)
+			                       .attr("stroke", "grey");	   
 
-		        //Add the SVG Text Element to the svgContainer
-				var text = svg.selectAll("text")
-				                        .data(testData.series)
-				                        .enter()
-				                        .append("text")
-						                .attr("x", function(d) { 
-						                 	return 0;
-						             	})
-						                .attr("y", function(d) { 
-						                 	return getYPos(d)-5; 
-						                 })
-						                .text( function (d) { 
-						                	return d; 
-						                })
-						                .attr("font-family", "sans-serif")
-						                .attr("font-size", "11px")
-			         				    .attr("fill", "black");     			   
-				
-				//add the static data
-				var circles = svg.selectAll("circle")
-								.data(testData.values)
-								.enter()
-								.append("circle")
-								.attr("cx", function(d, i) {
-									return getXPos(d,i);
-								})
-								.attr("cy", function(d,i){
-									return getYPos(d.input,i);
-								}) //this will change when the different axes are needed.
-								.style("fill", function(d, i){
-									return getColor(d,i);
-								})
-								.attr("r", 0)
-								.on('mouseover', function (d) {
-									makeToolTip(d, d3.event);
-									d3.select(this).transition().duration(200).style('stroke', 'red').style('stroke-width', '2px');
-									scope.$apply();
-								})
-								.on('mouseleave', function (d) {
-									removeToolTip();
-									d3.select(this).transition().duration(200).style('stroke', '').style('stroke-width', '');
-									scope.$apply();
-								}).on('mousemove', function (d) {
-									updateToolTip(d3.event);
-								}).on('click', function (d) {
-									scope.$apply();
-								})
-								.transition()
-									.duration(function(d,i){
-										return 1000 + (i*250);
+			        //Add the SVG Text Element to the svgContainer
+					var text = svg.selectAll("text")
+					                        .data(testData.series)
+					                        .enter()
+					                        .append("text")
+							                .attr("x", function(d) { 
+							                 	return 0;
+							             	})
+							                .attr("y", function(d) { 
+							                 	return getYPos(d)-5; 
+							                 })
+							                .text( function (d) { 
+							                	return d; 
+							                })
+							                .attr("font-family", "sans-serif")
+							                .attr("font-size", "11px")
+				         				    .attr("fill", "black");     			   
+					
+					//add the static data
+					var circles = svg.selectAll("circle")
+									.data(testData.values)
+									.enter()
+									.append("circle")
+									.attr("cx", function(d, i) {
+										return getXPos(d,i);
 									})
-									.ease('cubic-in-out')
-									.attr("r", function(d) {
-										return d.weight;
-									});
+									.attr("cy", function(d,i){
+										return getYPos(d.input,i);
+									}) //this will change when the different axes are needed.
+									.style("fill", function(d, i){
+										return getColor(d,i);
+									})
+									.attr("r", 0)
+									.on('mouseover', function (d) {
+										makeToolTip(d, d3.event);
+										d3.select(this).transition().duration(200).style('stroke', 'red').style('stroke-width', '2px');
+										scope.$apply();
+									})
+									.on('mouseleave', function (d) {
+										removeToolTip();
+										d3.select(this).transition().duration(200).style('stroke', '').style('stroke-width', '');
+										scope.$apply();
+									}).on('mousemove', function (d) {
+										updateToolTip(d3.event);
+									}).on('click', function (d) {
+										scope.$apply();
+									})
+									.transition()
+										.duration(function(d,i){
+											return 1000 + (i*250);
+										})
+										.ease('cubic-in-out')
+										.attr("r", function(d) {
+											return d.weight;
+										});
 
-				//Render X axis
-				svg.append("g")
-				   .attr("class", "x axis")
-				   .attr("transform", "translate(0," + height + ")") //controls the height of the timeline
-				   .call(xAxis);
+					//Render X axis
+					svg.append("g")
+					   .attr("class", "x axis")
+					   .attr("transform", "translate(0," + height + ")") //controls the height of the timeline
+					   .call(xAxis);
 
-				//******Helper functions
+					//******Helper functions
 
-				var _tickHeights = {};
-				/**
-				* Assign the heights for each input in the data series.
-				* Value assigns the _tickheights var for use in getYPos.
-				* @return none
-				*/
-				function assignHeights(){
-					var temp = {};
-					var totalTicks = testData.series.length;
-					var totalHeight = height - 50 -margin.bottom; //25 buffer from top & bottom
-					var spacing = totalHeight/(totalTicks-1);
+					var _tickHeights = {};
+					/**
+					* Assign the heights for each input in the data series.
+					* Value assigns the _tickheights var for use in getYPos.
+					* @return none
+					*/
+					function assignHeights(){
+						var temp = {};
+						var totalTicks = testData.series.length;
+						var totalHeight = height - 50 -margin.bottom; //25 buffer from top & bottom
+						var spacing = totalHeight/(totalTicks-1);
 
-					for(var i=0; i<totalTicks; i+=1){
-						temp[testData.series[i]] = (spacing * i)+(25+margin.top);
+						for(var i=0; i<totalTicks; i+=1){
+							temp[testData.series[i]] = (spacing * i)+(25+margin.top);
+						}
+						//assign
+						_tickHeights = temp;
 					}
-					//assign
-					_tickHeights = temp;
+
+					/** 
+					* Take a data object and an index and returns 
+					* the value for the x coordinate.
+					* @return int xPosition
+					*/
+					function getXPos(d, i) {
+	        			return margin.left + (d.time - beginning) * scaleFactor;
+	      			}
+
+	      			/** 
+					* Take a data object and an index and returns 
+					* the value for the x coordinate.
+					* @return int xPosition
+					*/
+	      			function getYPos(d,i){
+	      				/*This method is going to need to take in 
+	      				//what its input it is so that the proper
+	      				/ height will be so that it lies on the correct axis
+	      				*/
+	      				return _tickHeights[d];
+	      			}
+
+	    			/**
+				    * Takes index and returns a color value
+				    * @return {[type]} [description]
+				    */
+	    			function getColor(d,i){
+	    				var index = _.indexOf(testData.sources, d.source);
+	    				return colorCycle(index);
+	    			}
+
+	    			/**
+				    * Formats date object into a string
+				    * @return string MM/DD/YYYY HH:MM
+				    */
+	    			function formatDate(date){
+	    				var year = date.getFullYear().toString().slice(-2);
+	    				var time = date.toTimeString().slice(0,8);
+	    				return (date.getMonth()+1) + "/" + date.getDate() + "/" + year + " " +time;
+	    			}
+
+	    			/**
+				    * Creates and displays tooltip
+				    * @return {[type]} [description]
+				    */
+				    function makeToolTip(data, event) {
+				    	var date = new Date(data.time)
+				        data = "Source: " + data.source + "<br> Date: " + formatDate(date) + "<br> Weight: " + data.weight;
+				        angular.element('<p id="tooltip" style="' + tooltip + '"></p>').html(data).appendTo('body').fadeIn('slow').css({
+				        left: event.pageX + 20,
+				        top: event.pageY - 30
+				        });
+				      }
+
+				      /**
+				     * Clears the tooltip from body
+				     * @return {[type]} [description]
+				     */
+				      function removeToolTip() {
+				        angular.element('#tooltip').remove();
+				      }
+
+				      function updateToolTip(event) {
+				        angular.element('#tooltip').css({
+				          left: event.pageX + 20,
+				          top: event.pageY - 30
+				        });
+				      }
+
 				}
 
-				/** 
-				* Take a data object and an index and returns 
-				* the value for the x coordinate.
-				* @return int xPosition
-				*/
-				function getXPos(d, i) {
-        			return margin.left + (d.time - beginning) * scaleFactor;
-      			}
-
-      			/** 
-				* Take a data object and an index and returns 
-				* the value for the x coordinate.
-				* @return int xPosition
-				*/
-      			function getYPos(d,i){
-      				/*This method is going to need to take in 
-      				//what its input it is so that the proper
-      				/ height will be so that it lies on the correct axis
-      				*/
-      				return _tickHeights[d];
-      			}
-
-    			/**
-			    * Takes index and returns a color value
-			    * @return {[type]} [description]
-			    */
-    			function getColor(d,i){
-    				var index = _.indexOf(testData.sources, d.source);
-    				return colorCycle(index);
-    			}
-
-    			/**
-			    * Formats date object into a string
-			    * @return string MM/DD/YYYY HH:MM
-			    */
-    			function formatDate(date){
-    				var year = date.getFullYear().toString().slice(-2);
-    				var time = date.toTimeString().slice(0,8);
-    				return (date.getMonth()+1) + "/" + date.getDate() + "/" + year + " " +time;
-    			}
-
-    			/**
-			    * Creates and displays tooltip
-			    * @return {[type]} [description]
-			    */
-			    function makeToolTip(data, event) {
-			    	var date = new Date(data.time)
-			        data = "Source: " + data.source + "<br> Date: " + formatDate(date) + "<br> Weight: " + data.weight;
-			        angular.element('<p id="tooltip" style="' + tooltip + '"></p>').html(data).appendTo('body').fadeIn('slow').css({
-			        left: event.pageX + 20,
-			        top: event.pageY - 30
-			        });
-			      }
-
-			      /**
-			     * Clears the tooltip from body
-			     * @return {[type]} [description]
-			     */
-			      function removeToolTip() {
-			        angular.element('#tooltip').remove();
-			      }
-			      function updateToolTip(event) {
-			        angular.element('#tooltip').css({
-			          left: event.pageX + 20,
-			          top: event.pageY - 30
-			        });
-			      }
+			   // watches
+			    //Watch 'data' and run scope.render(newVal) whenever it changes
+        		scope.$watch('timelineInfo', function(){
+        			console.log("Updating with: ", scope);
+        			render(scope.timelineInfo);
+        		}, false);  
 
 				})();
 			}
@@ -736,88 +740,90 @@ timeframeModule.directive('timelineD3', [
 ]);
 
 //random graph example. This is just to show the formatting of the code 
-timeframeModule.directive('otherthing', [
-	function () {
-		return {
-			restrict: 'E', 
-			scope: {
-				data: '='
-			},
-			link: function(scope, element){
-				//Set margins, width, and height
-				var margin = {top: 20, right: 20, bottom: 30, left: 40},
-				width = 480 - margin.left - margin.right,
-				height = 360 - margin.top - margin.bottom;
+// timeframeModule.directive('otherthing', [
+// 	function () {
+// 		return {
+// 			restrict: 'E', 
+// 			scope: {
+// 				data: '='
+// 			},
+// 			link: function(scope, element){
+// 				//Set margins, width, and height
+// 				var margin = {top: 20, right: 20, bottom: 30, left: 40},
+// 				width = 480 - margin.left - margin.right,
+// 				height = 360 - margin.top - margin.bottom;
 
-        		//Create the d3 element and position it based on margins
-       			var svg = d3.select(element[0])
-        			.append("svg")
-        			.attr('width', width + margin.left + margin.right)
-        			.attr('height', height + margin.top + margin.bottom)
-        			.append("g")
-        			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+//         		//Create the d3 element and position it based on margins
+//        			var svg = d3.select(element[0])
+//         			.append("svg")
+//         			.attr('width', width + margin.left + margin.right)
+//         			.attr('height', height + margin.top + margin.bottom)
+//         			.append("g")
+//         			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        		//Create the scales we need for the graph
-        		var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
-        		var y = d3.scale.linear().range([height, 0]);
+//         		//Create the scales we need for the graph
+//         		var x = d3.scale.ordinal().rangeRoundBands([0, width], .1);
+//         		var y = d3.scale.linear().range([height, 0]);
 
-        		//Create the axes we need for the graph
-       		 	var xAxis = d3.svg.axis()
-        			.scale(x)
-        			.orient("bottom");
+//         		//Create the axes we need for the graph
+//        		 	var xAxis = d3.svg.axis()
+//         			.scale(x)
+//         			.orient("bottom");
 
-        		var yAxis = d3.svg.axis()
-        			.scale(y)
-       				.orient("left")
-        			.ticks(10);
-        		//Render graph based on 'data'
-        		scope.render = function(data) {
-        			//Set our scale's domains
-        			x.domain(data.map(function(d) { return d.name; }));
-        			y.domain([0, d3.max(data, function(d) { return d.count; })]);
-        		  	//Remove the axes so we can draw updated ones
-  					svg.selectAll('g.axis').remove();
+//         		var yAxis = d3.svg.axis()
+//         			.scale(y)
+//        				.orient("left")
+//         			.ticks(10);
+//         		//Render graph based on 'data'
+//         		scope.render = function(data) {
+//         			//Set our scale's domains
+//         			x.domain(data.map(function(d) { return d.name; }));
+//         			y.domain([0, d3.max(data, function(d) { return d.count; })]);
+//         		  	//Remove the axes so we can draw updated ones
+//   					svg.selectAll('g.axis').remove();
   
-  					//Render X axis
- 					 svg.append("g")
-     					.attr("class", "x axis")
-      					.attr("transform", "translate(0," + height + ")")
-     					.call(xAxis);
+//   					//Render X axis
+//  					 svg.append("g")
+//      					.attr("class", "x axis")
+//       					.attr("transform", "translate(0," + height + ")")
+//      					.call(xAxis);
       
-  					//Render Y axis
-  					svg.append("g")
-					    .attr("class", "y axis")
-					    .call(yAxis)
-					  .append("text")
-					    .attr("transform", "rotate(-90)")
-					    .attr("y", 6)
-					    .attr("dy", ".71em")
-					    .style("text-anchor", "end")
-					    .text("Count");
+//   					//Render Y axis
+//   					svg.append("g")
+// 					    .attr("class", "y axis")
+// 					    .call(yAxis)
+// 					  .append("text")
+// 					    .attr("transform", "rotate(-90)")
+// 					    .attr("y", 6)
+// 					    .attr("dy", ".71em")
+// 					    .style("text-anchor", "end")
+// 					    .text("Count");
 
-					//Create or update the bar data
-					var bars = svg.selectAll(".bar").data(data);
-					bars.enter()
-						.append("rect")
-						.attr("class", "bar")
-						.attr("x", function(d) { return x(d.name); })
-						.attr("width", x.rangeBand());
+// 					//Create or update the bar data
+// 					var bars = svg.selectAll(".bar").data(data);
+// 					bars.enter()
+// 						.append("rect")
+// 						.attr("class", "bar")
+// 						.attr("x", function(d) { return x(d.name); })
+// 						.attr("width", x.rangeBand());
 
-					//Animate bars
-					bars
-						.transition()
-						.duration(1000)
-						.attr('height', function(d) { return height - y(d.count); })
-						.attr("y", function(d) { return y(d.count); })
+// 					//Animate bars
+// 					bars
+// 						.transition()
+// 						.duration(1000)
+// 						.attr('height', function(d) { return height - y(d.count); })
+// 						.attr("y", function(d) { return y(d.count); })
 
-        		}
+//         		}
         
-        		//Watch 'data' and run scope.render(newVal) whenever it changes
-        		//Use true for 'objectEquality' property so comparisons are done on equality and not reference
-        		scope.$watch('data', function(){
-        			scope.render(scope.data);
-        		}, true);  
-			}
-		};
-	}
-]);
+//         		//Watch 'data' and run scope.render(newVal) whenever it changes
+//         		//Use true for 'objectEquality' property so comparisons are done on equality and not reference
+//         		scope.$watch('data', function(){
+//         			scope.render(scope.data);
+//         		}, true);  
+// 			}
+// 		};
+// 	}
+// ]);
+
+other = timeframeModule;
