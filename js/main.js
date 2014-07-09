@@ -428,9 +428,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 	function ($window) {
 		return {
 			restrict: 'E', 
-			// scope: {
-			// 	data: '='
-			// },
 			link: function(scope, element, attrs){
 				(function () {
 
@@ -482,6 +479,8 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					var testData = data;
 					//have this done in the testData generator method
 					testData.values = _.sortBy(testData.values, function(entry){return Math.min(entry.time)});
+					var largest = _.max(testData.values, function(entry){return entry.weight}).weight;
+					console.log(largest);
 
 					var hover = function () {},
 				        mouseover = function () {},
@@ -503,10 +502,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				        itemHeight = 20,
 				        itemMargin = 5,
 				        showTodayLine = false,
-				        showTodayFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle},
-				        showBorderLine = false,
-				        showBorderFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle}
-				      ;
+				        showTodayFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle};
 
 				    beginning = _.first(testData.values).time -10000000000; //get the beginning time
 				    ending = _.last(testData.values).time + 5000000000;
@@ -621,11 +617,11 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 									})
 									.transition()
 										.duration(function(d,i){
-											return 1000 + (i*250);
+											return 750 + (i*25);
 										})
-										.ease('cubic-in-out')
+										.ease('linear')
 										.attr("r", function(d) {
-											return d.weight;
+											return 30*(d.weight/largest);
 										});
 
 					//Render X axis
@@ -645,12 +641,20 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					function assignHeights(){
 						var temp = {};
 						var totalTicks = testData.series.length;
-						var totalHeight = height - 50 -margin.bottom; //25 buffer from top & bottom
-						var spacing = totalHeight/(totalTicks-1);
+						var totalHeight = height - 50 - margin.bottom; //25 buffer from top & bottom
+						var spacing = totalHeight/(totalTicks-1); 
 
-						for(var i=0; i<totalTicks; i+=1){
-							temp[testData.series[i]] = (spacing * i)+(25+margin.top);
+						if(totalTicks==1){
+							//case that there is only one tick to append.
+							temp[testData.series[0]] = totalHeight/2 + margin.bottom;
+
 						}
+						else{
+							for(var i=0; i<totalTicks; i+=1){
+								temp[testData.series[i]] = (spacing * i)+(25+margin.top);
+							}
+						}
+						
 						//assign
 						_tickHeights = temp;
 					}
@@ -702,7 +706,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				    */
 				    function makeToolTip(data, event) {
 				    	var date = new Date(data.time)
-				        data = "Source: " + data.source + "<br> Date: " + formatDate(date) + "<br> Weight: " + data.weight;
+				        data = "Source: " + data.source + "<br> Date: " + formatDate(date) + "<br> Time: " + data.time + "<br> Weight: " + data.weight;
 				        angular.element('<p id="tooltip" style="' + tooltip + '"></p>').html(data).appendTo('body').fadeIn('slow').css({
 				        left: event.pageX + 20,
 				        top: event.pageY - 30
