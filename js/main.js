@@ -277,6 +277,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		* This method performs black magic and should never be read.
 		*/
 		this.generateTimelineInfo = function(field){
+			field = field.toLowerCase();
 			//final values
 			var series = [],
 				sources = [],
@@ -366,15 +367,16 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		$scope.data = {}; //Data for the pie
 
 		//*************************
+		//All the information used for the timeline
 		//temp variable
-		$scope.timelineInfo = {};
+		$scope.timelineInfo = NaN;
 
 		//temp function
 		$scope.makeQcall = function(){
 			UUIDapiService.callDSApi($scope.inputID, function(returnJSON){
 				//set timeline info
 				
-				$scope.timelineInfo = UUIDCleaner.generateTimelineInfo('tel');
+				$scope.timelineInfo = UUIDCleaner.generateTimelineInfo($scope.activeTab);
 				other = $scope.timelineInfo;
 			});
 
@@ -473,9 +475,17 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 						time: 1398138820000
 					}]
 				};
+				var svg = d3.select('#random')
+	        			.append("svg");
 
 				var render = function(data){
 					console.log("render called using data: ", data);
+
+					if(_.isNaN(data)){
+						return;
+					}
+
+					svg.selectAll("*").remove();
 					var testData = data;
 					//have this done in the testData generator method
 					testData.values = _.sortBy(testData.values, function(entry){return Math.min(entry.time)});
@@ -522,8 +532,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					assignHeights();
 
 	        		//Create the d3 element and position it based on margins
-	       			var svg = d3.select('#random')
-	        			.append("svg")
+	       			d3.select('svg')
 	        			.attr('width', width + margin.left + margin.right)
 	        			.attr('height', height + margin.top + margin.bottom)
 	        			.append("g")
@@ -733,7 +742,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			   // watches
 			    //Watch 'data' and run scope.render(newVal) whenever it changes
         		scope.$watch('timelineInfo', function(){
-        			console.log("Updating with: ", scope);
         			render(scope.timelineInfo);
         		}, false);  
 
