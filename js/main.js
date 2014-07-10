@@ -640,103 +640,110 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 
 					//******Helper functions
 
-					var _tickHeights = {};
-					/**
-					* Assign the heights for each input in the data series.
-					* Value assigns the _tickheights var for use in getYPos.
-					* @return none
-					*/
-					function assignHeights(){
-						var temp = {};
-						var totalTicks = testData.series.length;
-						var totalHeight = height - 50 - margin.bottom; //25 buffer from top & bottom
-						var spacing = totalHeight/(totalTicks-1); 
+						var _tickHeights = {};
+						/**
+						* Assign the heights for each input in the data series.
+						* Value assigns the _tickheights var for use in getYPos.
+						* @return none
+						*/
+						function assignHeights(){
+							var temp = {};
+							var totalTicks = testData.series.length;
+							var totalHeight = height - 50 - margin.bottom; //25 buffer from top & bottom
+							var spacing = totalHeight/(totalTicks-1); 
 
-						if(totalTicks==1){
-							//case that there is only one tick to append.
-							temp[testData.series[0]] = totalHeight/2 + margin.bottom;
+							if(totalTicks==1){
+								//case that there is only one tick to append.
+								temp[testData.series[0]] = totalHeight/2 + margin.bottom;
 
-						}
-						else{
-							for(var i=0; i<totalTicks; i+=1){
-								temp[testData.series[i]] = (spacing * i)+(25+margin.top);
 							}
+							else{
+								for(var i=0; i<totalTicks; i+=1){
+									temp[testData.series[i]] = (spacing * i)+(25+margin.top);
+								}
+							}
+							
+							//assign
+							_tickHeights = temp;
 						}
-						
-						//assign
-						_tickHeights = temp;
-					}
 
-					/** 
-					* Take a data object and an index and returns 
-					* the value for the x coordinate.
-					* @return int xPosition
-					*/
-					function getXPos(d, i) {
-	        			return margin.left + (d.time - beginning) * scaleFactor;
-	      			}
+						/** 
+						* Take a data object and an index and returns 
+						* the value for the x coordinate.
+						* @return int xPosition
+						*/
+						function getXPos(d, i) {
+		        			return margin.left + (d.time - beginning) * scaleFactor;
+		      			}
 
-	      			/** 
-					* Take a data object and an index and returns 
-					* the value for the x coordinate.
-					* @return int xPosition
-					*/
-	      			function getYPos(d,i){
-	      				/*This method is going to need to take in 
-	      				* what its input it is so that the proper
-	      				* height will be so that it lies on the correct axis
-	      				*/
-	      				return _tickHeights[d];
-	      			}
+		      			/** 
+						* Take a data object and an index and returns 
+						* the value for the x coordinate.
+						* @return int xPosition
+						*/
+		      			function getYPos(d,i){
+		      				/*This method is going to need to take in 
+		      				* what its input it is so that the proper
+		      				* height will be so that it lies on the correct axis
+		      				*/
+		      				return _tickHeights[d];
+		      			}
 
-	    			/**
-				    * Takes index and returns a color value
-				    * @return {[type]} [description]
-				    */
-	    			function getColor(d,i){
-	    				var numSources = testData.sources.length;
-	    				var index = _.indexOf(testData.sources, d.source);
-	    				console.log(colorCycle(index));
-	    				return d3.hsl(colorCycle(index)).darker(Math.floor(index/20));
-	    			}
+		    			/**
+					    * Takes index and returns a color value
+					    * @return {[type]} [description]
+					    */
+		    			function getColor(d,i){
+		    				var colors = d3.scale.category20();
+		    				colors.domain(_.range(testData.sources.length));
+		    				var index = _.indexOf(testData.sources, d.source);
+		    				console.log(index, colors(index), d3.hsl(colors(index)).darker(Math.floor(index/20)*.5));
+		    				
+		    				return d3.hsl(colors(index)).darker(Math.floor(index/20)*.5);
 
-	    			/**
-				    * Formats date object into a string
-				    * @return string MM/DD/YYYY HH:MM
-				    */
-	    			function formatDate(date){
-	    				var year = date.getFullYear().toString().slice(-2);
-	    				var time = date.toTimeString().slice(0,8);
-	    				return (date.getMonth()+1) + "/" + date.getDate() + "/" + year + " " +time;
-	    			}
+		    				// var index = _.indexOf(testData.sources, d.source);
+		    				// console.log("Index: ", index%20, "original color: ", colors(index%20), " new color: ", d3.hsl(colors(index)).darker(Math.floor(index/20)));
+		    				// // console.log(colorCycle(index));
+		    				// return d3.hsl(colors(index%20)).darker(Math.floor(index/20));
+		    			}
 
-	    			/**
-				    * Creates and displays tooltip
-				    * @return {[type]} [description]
-				    */
-				    function makeToolTip(data, event) {
-				    	var date = new Date(data.time)
-				        data = "Source: " + data.source + "<br> Date: " + formatDate(date) + "<br> Time: " + data.time + "<br> Weight: " + data.weight;
-				        angular.element('<p id="tooltip" style="' + tooltip + '"></p>').html(data).appendTo('body').fadeIn('slow').css({
-				        left: event.pageX + 20,
-				        top: event.pageY - 30
-				        });
-				      }
+		    			/**
+					    * Formats date object into a string
+					    * @return string MM/DD/YYYY HH:MM
+					    */
+		    			function formatDate(date){
+		    				var year = date.getFullYear().toString().slice(-2);
+		    				var time = date.toTimeString().slice(0,8);
+		    				return (date.getMonth()+1) + "/" + date.getDate() + "/" + year + " " +time;
+		    			}
 
-				      /**
-				     * Clears the tooltip from body
-				     * @return {[type]} [description]
-				     */
-				      function removeToolTip() {
-				        angular.element('#tooltip').remove();
-				      }
+		    			/**
+					    * Creates and displays tooltip
+					    * @return {[type]} [description]
+					    */
+					    function makeToolTip(data, event) {
+					    	var date = new Date(data.time)
+					        data = "Source: " + data.source + "<br> Date: " + formatDate(date) + "<br> Time: " + data.time + "<br> Weight: " + data.weight;
+					        angular.element('<p id="tooltip" style="' + tooltip + '"></p>').html(data).appendTo('body').fadeIn('slow').css({
+					        left: event.pageX + 20,
+					        top: event.pageY - 30
+					        });
+					      }
 
-				      function updateToolTip(event) {
-				        angular.element('#tooltip').css({
-				          left: event.pageX + 20,
-				          top: event.pageY - 30
-				        });
-				      }
+					    /**
+					    * Clears the tooltip from body
+					    * @return {[type]} [description]
+					    */
+					    function removeToolTip() {
+					    	angular.element('#tooltip').remove();
+					    }
+
+					    function updateToolTip(event) {
+					    	angular.element('#tooltip').css({
+					    		left: event.pageX + 20,
+					    		top: event.pageY - 30
+					    	});
+					    }
 
 				}
 
@@ -744,7 +751,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			    //Watch 'data' and run scope.render(newVal) whenever it changes
         		scope.$watch('timelineInfo', function(){
         			render(scope.timelineInfo);
-        		}, true);  
+        		}, false);  
 
 				})();
 			}
