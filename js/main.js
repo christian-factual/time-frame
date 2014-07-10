@@ -425,24 +425,13 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			});
 		};
 	})
-	.directive('timelineD3', [
+.directive('timelineD3', [
 	'$window',
 	function ($window) {
 		return {
 			restrict: 'E', 
 			link: function(scope, element, attrs){
 				(function () {
-
-				//Spare HTML
-				var tooltip = [
-				'display:none;',
-				'position:absolute;',
-				'border:1px solid #333;',
-				'background-color:#161616;',
-				'border-radius:5px;',
-				'padding:5px;',
-				'color:#fff;'
-				].join('');
 
 				//New data structure with correct formatting.
 				var testData = {
@@ -475,46 +464,69 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 						time: 1398138820000
 					}]
 				};
-				var svg = d3.select('#random')
+
+				var hover = function () {},
+			        mouseover = function () {},
+			        mouseout = function () {},
+			        click = function () {},
+			        scroll = function () {},
+			        orient = "bottom",
+			        width = null,
+			        height = null,
+			        tickFormat = { format: d3.time.format("%m/%y"), //%m/%d/%y %H:%M
+			          tickTime: d3.time.month,
+			          tickInterval: 3,
+			          tickSize: 6 },
+			        colorCycle = d3.scale.category20(),
+			        colorPropertyName = null,
+			        beginning = 0,
+			        ending = 0,
+			        margin = {top: 20, right: 40, bottom: 30, left: 50},
+			        itemHeight = 20,
+			        itemMargin = 5,
+			        showTodayLine = false,
+			        showTodayFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle},
+					_tickHeights = {},
+					scaleFactor = 1,
+					largest = 1;
+				
+				var svg = d3.select('timeline-d3')
 	        			.append("svg");
 
-				var render = function(data){
-					console.log("render called using data: ", data);
+				/**
+				* Assign the heights for each input in the data series.
+				* Value assigns the _tickheights var for use in getYPos.
+				* @return none
+				*/
+				var assignHeights = function(data){
+					console.log("method called");
+					var temp = {};
+					var totalTicks = data.series.length;
+					var totalHeight = height - 50 - margin.bottom; //25 buffer from top & bottom
+					var spacing = totalHeight/(totalTicks-1); 
 
-					if(_.isNaN(data)){
-						return;
+					if(totalTicks==1){
+						//case that there is only one tick to append.
+						temp[data.series[0]] = totalHeight/2 + margin.bottom;
+
 					}
+					else{
+						for(var i=0; i<totalTicks; i+=1){
+							temp[data.series[i]] = (spacing * i)+(25+margin.top);
+						}
+					}
+					
+					//assign
+					return temp;
+				}	        	
 
-					svg.selectAll("*").remove();
-					var testData = data;
-					//have this done in the testData generator method
-					testData.values = _.sortBy(testData.values, function(entry){return Math.min(entry.time)});
-					var largest = _.max(testData.values, function(entry){return entry.weight}).weight;
+	        	var initVars = function(data){
+	        		//have this done in the data generator method
+					data.values = _.sortBy(data.values, function(entry){return Math.min(entry.time)});
+					largest = _.max(data.values, function(entry){return entry.weight}).weight;
 
-					var hover = function () {},
-				        mouseover = function () {},
-				        mouseout = function () {},
-				        click = function () {},
-				        scroll = function () {},
-				        orient = "bottom",
-				        width = null,
-				        height = null,
-				        tickFormat = { format: d3.time.format("%m/%y"), //%m/%d/%y %H:%M
-				          tickTime: d3.time.month,
-				          tickInterval: 3,
-				          tickSize: 6 },
-				        colorCycle = d3.scale.category20(),
-				        colorPropertyName = null,
-				        beginning = 0,
-				        ending = 0,
-				        margin = {top: 20, right: 70, bottom: 30, left: 50},
-				        itemHeight = 20,
-				        itemMargin = 5,
-				        showTodayLine = false,
-				        showTodayFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle};
-
-				    beginning = _.first(testData.values).time -10000000000; //get the beginning time
-				    ending = _.last(testData.values).time + 5000000000;
+				    beginning = _.first(data.values).time -10000000000; //get the beginning time
+				    ending = _.last(data.values).time + 5000000000;
 
 				    var w = angular.element($window);
 				    w.bind('resize', function (ev) {
@@ -524,11 +536,24 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				    });
 
 					//Set margins, width, and height
-					width = angular.element($window).width() -28 - margin.left - margin.right,
+					width = angular.element($window).width() - 28 - margin.left - margin.right,
 					height = 400 - margin.top - margin.bottom;
-					var scaleFactor = (1/(ending - beginning)) * (width - margin.left - margin.right);
+					scaleFactor= (1/(ending - beginning)) * (width - margin.left - margin.right);
 					//initialize the item heights
-					assignHeights();
+					console.log(assignHeights);
+					_tickHeights = assignHeights(data);
+	        	}
+
+				var render = function(data){
+					console.log("render called using data: ", data);
+
+					if(_.isNaN(data)){//check and make sure we have some data
+						return;
+					}
+
+					initVars(data);
+
+					svg.selectAll("*").remove();//empty previous SVG
 
 	        		//Create the d3 element and position it based on margins
 	       			d3.select('svg')
@@ -562,7 +587,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					   //                      .attr("class", "y axis");
 			        
 			        var ticks = svg.selectAll("tick")
-			        			   .data(testData.series)
+			        			   .data(data.series)
 			        			   .enter()
 			        			   .append("line")
 			                       .attr("x1", margin.left)
@@ -578,7 +603,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 
 			        //Add the SVG Text Element to the svgContainer
 					var text = svg.selectAll("text")
-					                        .data(testData.series)
+					                        .data(data.series)
 					                        .enter()
 					                        .append("text")
 							                .attr("x", function(d) { 
@@ -594,9 +619,9 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 							                .attr("font-size", "11px")
 				         				    .attr("fill", "black");     			   
 					
-					//add the static data
+					//add the data
 					var circles = svg.selectAll("circle")
-									.data(testData.values)
+									.data(data.values)
 									.enter()
 									.append("circle")
 									.attr("cx", function(d, i) {
@@ -640,32 +665,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 
 					//******Helper functions
 
-						var _tickHeights = {};
-						/**
-						* Assign the heights for each input in the data series.
-						* Value assigns the _tickheights var for use in getYPos.
-						* @return none
-						*/
-						function assignHeights(){
-							var temp = {};
-							var totalTicks = testData.series.length;
-							var totalHeight = height - 50 - margin.bottom; //25 buffer from top & bottom
-							var spacing = totalHeight/(totalTicks-1); 
-
-							if(totalTicks==1){
-								//case that there is only one tick to append.
-								temp[testData.series[0]] = totalHeight/2 + margin.bottom;
-
-							}
-							else{
-								for(var i=0; i<totalTicks; i+=1){
-									temp[testData.series[i]] = (spacing * i)+(25+margin.top);
-								}
-							}
-							
-							//assign
-							_tickHeights = temp;
-						}
 
 						/** 
 						* Take a data object and an index and returns 
@@ -695,16 +694,11 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					    */
 		    			function getColor(d,i){
 		    				var colors = d3.scale.category20();
-		    				colors.domain(_.range(testData.sources.length));
-		    				var index = _.indexOf(testData.sources, d.source);
-		    				console.log(index, colors(index), d3.hsl(colors(index)).darker(Math.floor(index/20)*.5));
+		    				colors.domain(_.range(data.sources.length));
+		    				var index = _.indexOf(data.sources, d.source);
+		    				// console.log(index, colors(index), d3.hsl(colors(index)).darker(Math.floor(index/20)*.5));
 		    				
-		    				return d3.hsl(colors(index)).darker(Math.floor(index/20)*.5);
-
-		    				// var index = _.indexOf(testData.sources, d.source);
-		    				// console.log("Index: ", index%20, "original color: ", colors(index%20), " new color: ", d3.hsl(colors(index)).darker(Math.floor(index/20)));
-		    				// // console.log(colorCycle(index));
-		    				// return d3.hsl(colors(index%20)).darker(Math.floor(index/20));
+		    				return d3.hsl(colors(index)).darker(Math.floor(index/20)*.75);
 		    			}
 
 		    			/**
@@ -716,6 +710,17 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		    				var time = date.toTimeString().slice(0,8);
 		    				return (date.getMonth()+1) + "/" + date.getDate() + "/" + year + " " +time;
 		    			}
+
+		    			//Tooltip template
+						var tooltip = [
+							'display:none;',
+							'position:absolute;',
+							'border:1px solid #333;',
+							'background-color:#161616;',
+							'border-radius:5px;',
+							'padding:5px;',
+							'color:#fff;'
+							].join('');
 
 		    			/**
 					    * Creates and displays tooltip
@@ -744,9 +749,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					    		top: event.pageY - 30
 					    	});
 					    }
-
 				}
-
 			   // watches
 			    //Watch 'data' and run scope.render(newVal) whenever it changes
         		scope.$watch('timelineInfo', function(){
