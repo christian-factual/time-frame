@@ -322,6 +322,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					//case that we got the JSON
 					userPayload = inputJSON.payload[field];
 					weight = allInputs[key][field].total_field_weight;
+					weight = weight==0 ? 1 : weight;//make all the 0 fields into 1s
 
 					//now have all the values; need to put together & push onto array
 					series.push(userPayload);
@@ -499,7 +500,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				* @return none
 				*/
 				var assignHeights = function(data){
-					console.log("method called");
 					var temp = {};
 					var totalTicks = data.series.length;
 					var totalHeight = height - 50 - margin.bottom; //25 buffer from top & bottom
@@ -518,7 +518,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					
 					//assign
 					return temp;
-				}	        	
+				}	     	
 
 	        	var initVars = function(data){
 	        		//have this done in the data generator method
@@ -540,9 +540,58 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					height = 400 - margin.top - margin.bottom;
 					scaleFactor= (1/(ending - beginning)) * (width - margin.left - margin.right);
 					//initialize the item heights
-					console.log(assignHeights);
 					_tickHeights = assignHeights(data);
 	        	}
+
+				/**
+				* Method for creating the cluster groups from the input data.
+				*
+				**/   
+	        	var formGroups = function(data){
+	        		inputGroups = {};
+	        		//initialize with the key: inputs && value: empty array
+	        		for(var index in data.series){
+	        			inputGroups[data.series[index]] = []
+	        		}
+
+	        		//iterate through the values & group
+	        		for(var index in data.values){
+	        			var value = data.values[index];
+	        			var workingSeries = inputGroups[value.input];
+	        			var group = {};
+	        			
+	        			//check if this is first value in the first group of the series
+	        			if(_.size(workingSeries) == 0){ //no group has been made yet
+	        				group = {
+	        					beginning: value.time,
+	        					values: [value]
+	        				}
+	        				workingSeries.push(group);
+	        				//added group && now done w/ this iteration
+	        				continue;
+	        			}
+	        			//there is already a group made
+	        			group = _.last(workingSeries);
+	        			var prevVal = _.last(group.values);
+	        			//check if the value belongs in the group before it
+	        			var firstR = getXPos(prevVal, 0) + getRadius(prevVal);
+	        			var secondR = getXPos(value, 0) - getRadius(value);
+	        			if( firstR > secondR ){//case that they should be grouped
+	        				group.values.push(value);
+	        			}
+	        			else{//case they the new value doesnt fall in the group
+	        				group = {
+	        					beginning: value.time,
+	        					values: [value]
+	        				}
+	        				workingSeries.push(group);
+	        			}
+	        		}
+	        		console.log(inputGroups);
+	        		return inputGroups;
+	        	}
+
+	        	
 
 				var render = function(data){
 					console.log("render called using data: ", data);
@@ -552,6 +601,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					}
 
 					initVars(data);
+					formGroups(data);
 
 					svg.selectAll("*").remove();//empty previous SVG
 
@@ -654,7 +704,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 										})
 										.ease('linear')
 										.attr("r", function(d) {
-											return 20*(d.weight/largest);
+											return getRadius(d);
 										});
 
 					//Render X axis
@@ -664,30 +714,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					   .call(xAxis);
 
 					//******Helper functions
-
-
-						/** 
-						* Take a data object and an index and returns 
-						* the value for the x coordinate.
-						* @return int xPosition
-						*/
-						function getXPos(d, i) {
-		        			return margin.left + (d.time - beginning) * scaleFactor;
-		      			}
-
-		      			/** 
-						* Take a data object and an index and returns 
-						* the value for the x coordinate.
-						* @return int xPosition
-						*/
-		      			function getYPos(d,i){
-		      				/*This method is going to need to take in 
-		      				* what its input it is so that the proper
-		      				* height will be so that it lies on the correct axis
-		      				*/
-		      				return _tickHeights[d];
-		      			}
-
 		    			/**
 					    * Takes index and returns a color value
 					    * @return {[type]} [description]
@@ -696,8 +722,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		    				var colors = d3.scale.category20();
 		    				colors.domain(_.range(data.sources.length));
 		    				var index = _.indexOf(data.sources, d.source);
-		    				// console.log(index, colors(index), d3.hsl(colors(index)).darker(Math.floor(index/20)*.5));
-		    				
 		    				return d3.hsl(colors(index)).darker(Math.floor(index/20)*.75);
 		    			}
 
@@ -750,6 +774,31 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					    	});
 					    }
 				}
+				/** 
+				* Take a data object and an index and returns 
+				* the value for the x coordinate.
+				* @return int xPosition
+				*/
+				function getXPos(d, i) {
+        			return margin.left + (d.time - beginning) * scaleFactor;
+      			}
+
+      			/** 
+				* Take a data object and an index and returns 
+				* the value for the x coordinate.
+				* @return int xPosition
+				*/
+      			function getYPos(d,i){
+      				/*This method is going to need to take in 
+      				* what its input it is so that the proper
+      				* height will be so that it lies on the correct axis
+      				*/
+      				return _tickHeights[d];
+      			}
+
+      			function getRadius(d){
+      				return 20*(d.weight/largest)
+      			}
 			   // watches
 			    //Watch 'data' and run scope.render(newVal) whenever it changes
         		scope.$watch('timelineInfo', function(){
