@@ -278,7 +278,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		* This method performs black magic and should never be read.
 		*/
 		this.generateTimelineInfo = function(field){
-			console.log("Called generateTimelineInfo with this field: ", field);
 			field = field.toLowerCase();
 			//final values
 			var series = [],
@@ -341,12 +340,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			}
 			series = _.uniq(series);
 			sources = _.uniq(sources);
-
-			console.log("Generated JSON: ", {
-				series: series,
-				sources: sources,
-				values: values
-			});
 			return {
 				series: series,
 				sources: sources,
@@ -397,7 +390,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		$scope.selectAttrib = function(event){
 			//onclick set the active 
 			$scope.activeTab = event.target.attributes[2].nodeValue;
-			$scope.timelineInfo = UUIDCleaner.generateTimelineInfo($scope.activeTab);
 			try{
 				$scope.data = inputReportCleaner.generateChartInfo($scope.activeTab);
 				$scope.assignContentText(inputReportCleaner.generateContentText($scope.activeTab));
@@ -498,7 +490,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					//have this done in the testData generator method
 					testData.values = _.sortBy(testData.values, function(entry){return Math.min(entry.time)});
 					var largest = _.max(testData.values, function(entry){return entry.weight}).weight;
-					console.log(largest);
 
 					var hover = function () {},
 				        mouseover = function () {},
@@ -638,7 +629,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 										})
 										.ease('linear')
 										.attr("r", function(d) {
-											return 30*(d.weight/largest);
+											return 20*(d.weight/largest);
 										});
 
 					//Render X axis
@@ -692,8 +683,8 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					*/
 	      			function getYPos(d,i){
 	      				/*This method is going to need to take in 
-	      				//what its input it is so that the proper
-	      				/ height will be so that it lies on the correct axis
+	      				* what its input it is so that the proper
+	      				* height will be so that it lies on the correct axis
 	      				*/
 	      				return _tickHeights[d];
 	      			}
@@ -703,8 +694,10 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				    * @return {[type]} [description]
 				    */
 	    			function getColor(d,i){
+	    				var numSources = testData.sources.length;
 	    				var index = _.indexOf(testData.sources, d.source);
-	    				return colorCycle(index);
+	    				console.log(colorCycle(index));
+	    				return d3.hsl(colorCycle(index)).darker(Math.floor(index/20));
 	    			}
 
 	    			/**
