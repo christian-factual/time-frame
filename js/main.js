@@ -565,6 +565,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 	        				group = {
 	        					input: value.input,
 	        					beginning: value.time,
+	        					count: 1,
 	        					values: [value]
 	        				}
 	        				workingSeries.push(group);
@@ -579,11 +580,13 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 	        			var secondR = getXPos(value, 0) - getRadius(value);
 	        			if( firstR > secondR ){//case that they should be grouped
 	        				group.values.push(value);
+	        				group.count = group.values.length;
 	        			}
 	        			else{//case they the new value doesnt fall in the group
 	        				group = {
 	        					input: value.input,
 	        					beginning: value.time,
+	        					count: 1,
 	        					values: [value]
 	        				}
 	        				workingSeries.push(group);
