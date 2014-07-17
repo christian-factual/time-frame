@@ -494,6 +494,9 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				var svg = d3.select('timeline-d3')
 	        			.append("svg");
 
+	        	var newsg = d3.select('#random')
+	        				.append("newsg");
+
 				/**
 				* Assign the heights for each input in the data series.
 				* Value assigns the _tickheights var for use in getYPos.
@@ -633,7 +636,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 						          .tickSize(tickFormat.tickSize);
 
 					//make the pseudo y-axis
-	 				// var yAxis = svg.append("line")
+	 					// var yAxis = svg.append("line")
 					   //                      .attr("x1", margin.left)
 					   //                      .attr("y1", margin.top)
 					   //                      .attr("x2", margin.left)
@@ -660,21 +663,21 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 
 			        //Add the SVG Text Element to the svgContainer
 					var text = svg.selectAll("text")
-					                        .data(data.series)
-					                        .enter()
-					                        .append("text")
-							                .attr("x", function(d) { 
-							                 	return 0;
-							             	})
-							                .attr("y", function(d) { 
-							                 	return getYPos(d)-5; 
-							                 })
-							                .text( function (d) { 
-							                	return d; 
-							                })
-							                .attr("font-family", "sans-serif")
-							                .attr("font-size", "11px")
-				         				    .attr("fill", "black");     			   
+			                        .data(data.series)
+			                        .enter()
+			                        .append("text")
+					                .attr("x", function(d) { 
+					                 	return 0;
+					             	})
+					                .attr("y", function(d) { 
+					                 	return getYPos(d)-5; 
+					                 })
+					                .text( function (d) { 
+					                	return d; 
+					                })
+					                .attr("font-family", "sans-serif")
+					                .attr("font-size", "11px")
+		         				    .attr("fill", "black");     			   
 					
 					//add the data
 					var circles = svg.selectAll("circle")
@@ -719,6 +722,117 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					   .attr("class", "x axis")
 					   .attr("transform", "translate(0," + height + ")") //controls the height of the timeline
 					   .call(xAxis);
+
+
+
+		// 				svg.selectAll("*").remove();//empty previous SVG
+
+	    //     		//Create the d3 element and position it based on margins
+	    //    			d3.select('svg')
+	    //     			.attr('width', width + margin.left + margin.right)
+	    //     			.attr('height', height + margin.top + margin.bottom)
+	    //     			.append("g")
+	    //     				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+	    //     		//Need scales for the input
+	    //     		var xScale = d3.time.scale()
+					// 		       .domain([beginning, ending])
+					// 		       .range([margin.left, width - margin.right]);
+
+					// var xAxis = d3.svg.axis()
+					// 	       	  .scale(xScale)
+					// 	          .orient(orient)
+					// 	          .tickFormat(tickFormat.format)
+					// 	          .ticks(tickFormat.tickTime, tickFormat.tickInterval)
+					// 	          .tickSize(tickFormat.tickSize);
+
+					// //make the pseudo y-axis
+	 			// 		// var yAxis = svg.append("line")
+					//    //                      .attr("x1", margin.left)
+					//    //                      .attr("y1", margin.top)
+					//    //                      .attr("x2", margin.left)
+					//    //                      .attr("y2", height)
+					//    //                      .attr("stroke-width", 1)
+					//    //                      .attr("stroke", "black")
+					//    //                      .attr("shape-rendering", "crispEdges")
+					//    //                      .attr("class", "y axis");
+			        
+			  //       var ticks = svg.selectAll("tick")
+			  //       			   .data(data.series)
+			  //       			   .enter()
+			  //       			   .append("line")
+			  //                      .attr("x1", margin.left)
+			  //                      .attr("y1", function(d,i){
+			  //                      		return getYPos(d,i);
+			  //                      })
+			  //                      .attr("x2", width - margin.right)
+			  //                      .attr("y2", function(d,i){
+			  //                      		return getYPos(d,i);
+			  //                      })	
+			  //                      .attr("stroke-width", 1)
+			  //                      .attr("stroke", "grey");	   
+
+			  //       //Add the SVG Text Element to the svgContainer
+					// var text = svg.selectAll("text")
+					//                         .data(data.series)
+					//                         .enter()
+					//                         .append("text")
+					// 		                .attr("x", function(d) { 
+					// 		                 	return 0;
+					// 		             	})
+					// 		                .attr("y", function(d) { 
+					// 		                 	return getYPos(d)-5; 
+					// 		                 })
+					// 		                .text( function (d) { 
+					// 		                	return d; 
+					// 		                })
+					// 		                .attr("font-family", "sans-serif")
+					// 		                .attr("font-size", "11px")
+				 //         				    .attr("fill", "black");     			   
+					
+					// //add the data
+					// var circles = svg.selectAll("circle")
+					// 				.data(data.values)
+					// 				.enter()
+					// 				.append("circle")
+					// 				.attr("cx", function(d, i) {
+					// 					return getXPos(d,i);
+					// 				})
+					// 				.attr("cy", function(d,i){
+					// 					return getYPos(d.input,i);
+					// 				}) //this will change when the different axes are needed.
+					// 				.style("fill", function(d, i){
+					// 					return getColor(d,i);
+					// 				})
+					// 				.attr("r", 0)
+					// 				.on('mouseover', function (d) {
+					// 					makeToolTip(d, d3.event);
+					// 					d3.select(this).transition().duration(200).style('stroke', 'red').style('stroke-width', '2px');
+					// 					scope.$apply();
+					// 				})
+					// 				.on('mouseleave', function (d) {
+					// 					removeToolTip();
+					// 					d3.select(this).transition().duration(200).style('stroke', '').style('stroke-width', '');
+					// 					scope.$apply();
+					// 				}).on('mousemove', function (d) {
+					// 					updateToolTip(d3.event);
+					// 				}).on('click', function (d) {
+					// 					scope.$apply();
+					// 				})
+					// 				.transition()
+					// 					.duration(function(d,i){
+					// 						return 750 + (i*25);
+					// 					})
+					// 					.ease('linear')
+					// 					.attr("r", function(d) {
+					// 						return getRadius(d);
+					// 					});
+
+					// //Render X axis
+					// svg.append("g")
+					//    .attr("class", "x axis")
+					//    .attr("transform", "translate(0," + height + ")") //controls the height of the timeline
+					//    .call(xAxis);
 
 					//******Helper functions
 		    			/**
