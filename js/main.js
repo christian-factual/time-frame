@@ -579,8 +579,8 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 	        			group = _.last(workingSeries);
 	        			var prevVal = _.last(group.values);
 	        			//check if the value belongs in the group before it
-	        			var firstR = getXPos(prevVal, 0) + getRadius(prevVal);
-	        			var secondR = getXPos(value, 0) - getRadius(value);
+	        			var firstR = getXPos(prevVal) + getRadius(prevVal);
+	        			var secondR = getXPos(value) - getRadius(value);
 	        			if( firstR > secondR ){//case that they should be grouped
 	        				group.values.push(value);
 	        				group.count = group.values.length;
@@ -651,12 +651,12 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			        			   .enter()
 			        			   .append("line")
 			                       .attr("x1", margin.left)
-			                       .attr("y1", function(d,i){
-			                       		return getYPos(d,i);
+			                       .attr("y1", function(d){
+			                       		return getYPos(d);
 			                       })
 			                       .attr("x2", width - margin.right)
-			                       .attr("y2", function(d,i){
-			                       		return getYPos(d,i);
+			                       .attr("y2", function(d){
+			                       		return getYPos(d);
 			                       })	
 			                       .attr("stroke-width", 1)
 			                       .attr("stroke", "grey");	   
@@ -689,21 +689,54 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		         		
 		         		if(entry.count > 1){//case that it is a group
 		         			console.log("This is a group");
-
+		         			svg.append("rectangle")
+		         				.datum(entry)
+		         				.attr("cx", function(d) {
+									return getXPos(d);
+								})
+								.attr("cy", function(d){
+									return getYPos(d.input);
+								}) //this will change when the different axes are needed.
+								.style("fill", function(d){
+									return getColor(d);
+								})
+								.attr("r", 0)
+								.on('mouseover', function (d) {
+									// makeToolTip(d, d3.event);
+									d3.select(this).transition().duration(200).style('stroke', 'red').style('stroke-width', '2px');
+									scope.$apply();
+								})
+								.on('mouseleave', function (d) {
+									// removeToolTip();
+									d3.select(this).transition().duration(200).style('stroke', '').style('stroke-width', '');
+									scope.$apply();
+								}).on('mousemove', function (d) {
+									// updateToolTip(d3.event);
+								}).on('click', function (d) {
+									// this will cause the expand and animation
+									console.log(d);
+								})
+								.transition()
+									.duration(function(d,i){
+										return 750 + (i*25);
+									})
+									.ease('linear')
+									.attr("r", function(d) {
+										return getRadius(d);
+									});
 
 		         		}
 		         		else{
 		         			svg.append("circle")
 		         				.datum(entry.values[0])
-								.attr("cx", function(d, i) {
-									console.log("getting x"); 
-									return getXPos(d,i);
+								.attr("cx", function(d) {
+									return getXPos(d);
 								})
-								.attr("cy", function(d,i){
-									return getYPos(d.input,i);
+								.attr("cy", function(d){
+									return getYPos(d.input);
 								}) //this will change when the different axes are needed.
-								.style("fill", function(d, i){
-									return getColor(d,i);
+								.style("fill", function(d){
+									return getColor(d);
 								})
 								.attr("r", 0)
 								.on('mouseover', function (d) {
@@ -741,14 +774,14 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					// 				.data(data.values)
 					// 				.enter()
 					// 				.append("circle")
-					// 				.attr("cx", function(d, i) {
-					// 					return getXPos(d,i);
+					// 				.attr("cx", function(d) {
+					// 					return getXPos(d);
 					// 				})
-					// 				.attr("cy", function(d,i){
-					// 					return getYPos(d.input,i);
+					// 				.attr("cy", function(d){
+					// 					return getYPos(d.input);
 					// 				}) //this will change when the different axes are needed.
-					// 				.style("fill", function(d, i){
-					// 					return getColor(d,i);
+					// 				.style("fill", function(d){
+					// 					return getColor(d);
 					// 				})
 					// 				.attr("r", 0)
 					// 				.on('mouseover', function (d) {
@@ -815,12 +848,12 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					//       			   .enter()
 					//       			   .append("line")
 					//                      .attr("x1", margin.left)
-					//                      .attr("y1", function(d,i){
-					//                      		return getYPos(d,i);
+					//                      .attr("y1", function(d){
+					//                      		return getYPos(d);
 					//                      })
 					//                      .attr("x2", width - margin.right)
-					//                      .attr("y2", function(d,i){
-					//                      		return getYPos(d,i);
+					//                      .attr("y2", function(d){
+					//                      		return getYPos(d);
 					//                      })	
 					//                      .attr("stroke-width", 1)
 					//                      .attr("stroke", "grey");	   
@@ -848,14 +881,14 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 						// 				.data(data.values)
 						// 				.enter()
 						// 				.append("circle")
-						// 				.attr("cx", function(d, i) {
-						// 					return getXPos(d,i);
+						// 				.attr("cx", function(d) {
+						// 					return getXPos(d);
 						// 				})
 						// 				.attr("cy", function(d,i){
-						// 					return getYPos(d.input,i);
+						// 					return getYPos(d.input);
 						// 				}) //this will change when the different axes are needed.
-						// 				.style("fill", function(d, i){
-						// 					return getColor(d,i);
+						// 				.style("fill", function(d){
+						// 					return getColor(d);
 						// 				})
 						// 				.attr("r", 0)
 						// 				.on('mouseover', function (d) {
@@ -893,7 +926,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					    * Takes index and returns a color value
 					    * @return {[type]} [description]
 					    */
-		    			function getColor(d,i){
+		    			function getColor(d){
 		    				var colors = d3.scale.category20();
 		    				colors.domain(_.range(data.sources.length));
 		    				var index = _.indexOf(data.sources, d.source);
@@ -955,7 +988,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				* the value for the x coordinate.
 				* @return int xPosition
 				*/
-				function getXPos(d, i) {
+				function getXPos(d) {
         			return margin.left + (d.time - beginning) * scaleFactor;
       			}
 
@@ -964,7 +997,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				* the value for the x coordinate.
 				* @return int xPosition
 				*/
-      			function getYPos(d,i){
+      			function getYPos(d){
       				/*This method is going to need to take in 
       				* what its input it is so that the proper
       				* height will be so that it lies on the correct axis
