@@ -433,39 +433,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			restrict: 'E', 
 			link: function(scope, element, attrs){
 				(function () {
-
-				//New data structure with correct formatting.
-				var testData = {
-					series: ['310-234-1234', '713-555-1234', '505-555-1234'],
-					sources: ["yelp.com", "factual.com", "menupix.com", "yext.com", "menu.com"],
-					values: [{source: "yelp.com",
-						input: '713-555-1234',
-						weight: 13,
-						time: 1349823989000
-					}, {source: "yelp.com",
-						input: '713-555-1234',
-						weight: 20,
-						time: 1320000000000
-					}, {source: "factual.com",
-						input: '713-555-1234',
-						weight: 30,
-						time: 1397183604000
-					}, {source: "menupix.com",
-						input: '310-234-1234',
-						weight: 10,
-						time: 1371138820000
-					},{source: "menu.com",
-						input: '310-234-1234',
-						weight: 15,
-						time: 1381138820000
-					},
-					{source: "yext.com",
-						input: '505-555-1234',
-						weight: 25,
-						time: 1398138820000
-					}]
-				};
-
 				var hover = function () {},
 			        mouseover = function () {},
 			        mouseout = function () {},
@@ -689,25 +656,26 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		         		
 		         		if(entry.count > 1){//case that it is a group
 		         			console.log("This is a group");
-		         			svg.append("rectangle")
+		         			svg.append("rect")
 		         				.datum(entry)
-		         				.attr("cx", function(d) {
+		         				.attr("x", function(d) {
+
 									return getXPos(d);
 								})
-								.attr("cy", function(d){
+								.attr("y", function(d){
 									return getYPos(d.input);
-								}) //this will change when the different axes are needed.
-								.style("fill", function(d){
-									return getColor(d);
 								})
-								.attr("r", 0)
+								.attr("width", 10)
+								.attr("height", 10)
+								.style("fill", function(d){
+									// return getColor(d);
+									return "red";
+								})
 								.on('mouseover', function (d) {
-									// makeToolTip(d, d3.event);
 									d3.select(this).transition().duration(200).style('stroke', 'red').style('stroke-width', '2px');
 									scope.$apply();
 								})
 								.on('mouseleave', function (d) {
-									// removeToolTip();
 									d3.select(this).transition().duration(200).style('stroke', '').style('stroke-width', '');
 									scope.$apply();
 								}).on('mousemove', function (d) {
@@ -715,14 +683,18 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 								}).on('click', function (d) {
 									// this will cause the expand and animation
 									console.log(d);
+									// collapseAll(d);
 								})
 								.transition()
 									.duration(function(d,i){
 										return 750 + (i*25);
 									})
 									.ease('linear')
-									.attr("r", function(d) {
-										return getRadius(d);
+									.attr("width", function(d) {
+										return 20;
+									})
+									.attr("height", function(d){
+										return 20;
 									});
 
 		         		}
@@ -771,6 +743,14 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					   .call(xAxis);
 
 					//******Helper functions
+						/*
+						* Will collapse alls the lines, ticks & other content.
+						* Takes the object that was clicked
+						*/
+						function collapseAll(d){
+
+						}
+
 		    			/**
 					    * Takes index and returns a color value
 					    * @return {[type]} [description]
