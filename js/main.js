@@ -456,13 +456,11 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			        showTodayFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle},
 					_tickHeights = {},
 					scaleFactor = 1,
-					largest = 1;
+					largest = 1,
+					viewingGroup = false;
 				
 				var svg = d3.select('timeline-d3')
 	        			.append("svg");
-
-	        	var newsg = d3.select('#random')
-	        				.append("newsg");
 
 				/**
 				* Assign the heights for each input in the data series.
@@ -629,7 +627,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			                       .attr("stroke", "grey");	   
 
 			        //Add the SVG Text Element to the svgContainer
-					var text = svg.selectAll("text")
+					var text = svg.selectAll("label")
 			                        .data(data.series)
 			                        .enter()
 			                        .append("text")
@@ -645,9 +643,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					                .attr("font-family", "sans-serif")
 					                .attr("font-size", "11px")
 		         				    .attr("fill", "black");     			   
-
-		         	var circles = svg.selectAll("circle");
-		         	var groups = svg.selectAll("group");
 
 		         	console.log("*******************************Attempting to append circles!");
 
@@ -682,8 +677,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 									// updateToolTip(d3.event);
 								}).on('click', function (d) {
 									// this will cause the expand and animation
-									console.log(d);
-									// collapseAll(d);
+									collapseAll(d);
 								})
 								.transition()
 									.duration(function(d,i){
@@ -696,7 +690,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 									.attr("height", function(d){
 										return 20;
 									});
-
+						
 		         		}
 		         		else{
 		         			svg.append("circle")
@@ -735,6 +729,8 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 									});
 		         		}
 		         	}
+		         	var circles = svg.selectAll("circle");
+		         	var groups = svg.selectAll("rect");
 
 					//Render X axis
 					svg.append("g")
@@ -748,68 +744,145 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 						* Takes the object that was clicked
 						*/
 						function collapseAll(d){
+							if(!viewingGroup){//not viewing yet
+							//Remove all the extra parts
+								//remove extra clusters
+								svg.selectAll("rect")
+									.filter(function(datum){
+										return datum != d;
+									}).transition()
+								.style("opacity", 0)
+								.attr("y", height);
+								//remove extra ticks and texts
+								ticks.filter(function(datum){
+										console.log(datum, d.input);
+										return datum != d.input;
+									}).transition()
+									.style("opacity", 0)
+									.attr("y1", height)
+									.attr("y2", height);
+								//remove extra text labels
+								text.filter(function(datum){
+									return datum != d.input;
+								}).transition()
+								.attr("y", height)
+								.style("opacity", 0);
+
+							circles.transition()
+								.attr("cy", height)
+								.style("opacity", 0);
+
+							//center other parts 
+								svg.selectAll("rect")
+									.filter(function(datum){
+										return datum == d;
+									}).transition()
+								.attr("y", height/2);
+								//remove extra ticks and texts
+								ticks.filter(function(datum){
+										console.log(datum, d.input);
+										return datum == d.input;
+									}).transition()
+									.attr("y1", height/2)
+									.attr("y2", height/2);
+								//remove extra text labels
+								text.filter(function(datum){
+									return datum == d.input;
+								}).transition()
+								.attr("y", (height/2)-5);
+
+							viewingGroup = true;
+							}
+							else{
+								// restore
+							ticks.transition()
+								.attr("y1", function(d){
+									return getYPos(d);	
+								})
+								.attr("y2", function(d){
+									return getYPos(d);
+								})
+								.style("opacity", 1);
+							text.transition()
+								.attr("y", function(d){
+									return getYPos(d)-5;
+								})
+								.style("opacity", 1);
+							circles.transition()
+								.attr("cy", function(d){
+									return getYPos(d.input);
+								})
+								.style("opacity", 1);
+							groups.transition()
+								.attr("y", function(d){
+									return getYPos(d.input);
+								})
+								.style("opacity", 1);
+
+							viewingGroup = false;
+							}
 
 						}
 
-		    			/**
-					    * Takes index and returns a color value
-					    * @return {[type]} [description]
-					    */
-		    			function getColor(d){
-		    				var colors = d3.scale.category20();
-		    				colors.domain(_.range(data.sources.length));
-		    				var index = _.indexOf(data.sources, d.source);
-		    				return d3.hsl(colors(index)).darker(Math.floor(index/20)*.75);
-		    			}
+	    			/**
+				    * Takes index and returns a color value
+				    * @return {[type]} [description]
+				    */
+	    			function getColor(d){
+	    				var colors = d3.scale.category20();
+	    				colors.domain(_.range(data.sources.length));
+	    				var index = _.indexOf(data.sources, d.source);
+	    				return d3.hsl(colors(index)).darker(Math.floor(index/20)*.75);
+	    			}
 
-		    			/**
-					    * Formats date object into a string
-					    * @return string MM/DD/YYYY HH:MM
-					    */
-		    			function formatDate(date){
-		    				var year = date.getFullYear().toString().slice(-2);
-		    				var time = date.toTimeString().slice(0,8);
-		    				return (date.getMonth()+1) + "/" + date.getDate() + "/" + year + " " +time;
-		    			}
+	    			/**
+				    * Formats date object into a string
+				    * @return string MM/DD/YYYY HH:MM
+				    */
+	    			function formatDate(date){
+	    				var year = date.getFullYear().toString().slice(-2);
+	    				var time = date.toTimeString().slice(0,8);
+	    				return (date.getMonth()+1) + "/" + date.getDate() + "/" + year + " " +time;
+	    			}
 
-		    			//Tooltip template
-						var tooltip = [
-							'display:none;',
-							'position:absolute;',
-							'border:1px solid #333;',
-							'background-color:#161616;',
-							'border-radius:5px;',
-							'padding:5px;',
-							'color:#fff;'
-							].join('');
+	    			//Tooltip template
+					var tooltip = [
+						'display:none;',
+						'position:absolute;',
+						'border:1px solid #333;',
+						'background-color:#161616;',
+						'border-radius:5px;',
+						'padding:5px;',
+						'color:#fff;'
+						].join('');
 
-		    			/**
-					    * Creates and displays tooltip
-					    * @return {[type]} [description]
-					    */
-					    function makeToolTip(data, event) {
-					    	var date = new Date(data.time)
-					        data = "Source: " + data.source + "<br> Date: " + formatDate(date) + "<br> Time: " + data.time + "<br> Weight: " + data.weight;
-					        angular.element('<p id="tooltip" style="' + tooltip + '"></p>').html(data).appendTo('body').fadeIn('slow').css({
-					        left: event.pageX + 20,
-					        top: event.pageY - 30
-					        });
-					      }
+	    			/**
+				    * Creates and displays tooltip
+				    * @return {[type]} [description]
+				    */
+				    function makeToolTip(data, event) {
+				    	var date = new Date(data.time)
+				        data = "Source: " + data.source + "<br> Date: " + formatDate(date) + "<br> Time: " + data.time + "<br> Weight: " + data.weight;
+				        angular.element('<p id="tooltip" style="' + tooltip + '"></p>').html(data).appendTo('body').fadeIn('slow').css({
+				        left: event.pageX + 20,
+				        top: event.pageY - 30
+				        });
+				      }
 
-					    /**
-					    * Clears the tooltip from body
-					    * @return {[type]} [description]
-					    */
-					    function removeToolTip() {
-					    	angular.element('#tooltip').remove();
-					    }
+				    /**
+				    * Clears the tooltip from body
+				    * @return {[type]} [description]
+				    */
+				    function removeToolTip() {
+				    	angular.element('#tooltip').remove();
+				    }
 
-					    function updateToolTip(event) {
-					    	angular.element('#tooltip').css({
-					    		left: event.pageX + 20,
-					    		top: event.pageY - 30
-					    	});
-					    }
+				    function updateToolTip(event) {
+				    	angular.element('#tooltip').css({
+				    		left: event.pageX + 20,
+				    		top: event.pageY - 30
+				    	});
+				    }
 				}
 	        	
 				/** 
