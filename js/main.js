@@ -433,12 +433,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			restrict: 'E', 
 			link: function(scope, element, attrs){
 				(function () {
-				var hover = function () {},
-			        mouseover = function () {},
-			        mouseout = function () {},
-			        click = function () {},
-			        scroll = function () {},
-			        orient = "bottom",
+				var orient = "bottom",
 			        width = null,
 			        height = null,
 			        tickFormat = { format: d3.time.format("%m/%y"), //%m/%d/%y %H:%M
@@ -446,14 +441,9 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			          tickInterval: 3,
 			          tickSize: 6 },
 			        colorCycle = d3.scale.category20(),
-			        colorPropertyName = null,
 			        beginning = 0,
 			        ending = 0,
 			        margin = {top: 20, right: 40, bottom: 30, left: 50},
-			        itemHeight = 20,
-			        itemMargin = 5,
-			        showTodayLine = false,
-			        showTodayFormat = {marginTop: 25, marginBottom: 0, width: 1, color: colorCycle},
 					_tickHeights = {},
 					scaleFactor = 1,
 					largest = 1,
@@ -497,11 +487,11 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				    ending = _.last(data.values).time + 5000000000;
 
 				    var w = angular.element($window);
-				    w.bind('resize', function (ev) {
-				    		totalWidth = w.width();
-				    		console.log("Total Width: ", totalWidth);
-				    		totalHeight = element.height();
-				    });
+				    // w.bind('resize', function (ev) {
+				    // 		totalWidth = w.width();
+				    // 		console.log("Total Width: ", totalWidth);
+				    // 		totalHeight = element.height();
+				    // });
 
 					//Set margins, width, and height
 					width = angular.element($window).width() - 28 - margin.left - margin.right,
@@ -599,17 +589,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 						          .tickFormat(tickFormat.format)
 						          .ticks(tickFormat.tickTime, tickFormat.tickInterval)
 						          .tickSize(tickFormat.tickSize);
-
-					//make the pseudo y-axis
-	 					// var yAxis = svg.append("line")
-					   //                      .attr("x1", margin.left)
-					   //                      .attr("y1", margin.top)
-					   //                      .attr("x2", margin.left)
-					   //                      .attr("y2", height)
-					   //                      .attr("stroke-width", 1)
-					   //                      .attr("stroke", "black")
-					   //                      .attr("shape-rendering", "crispEdges")
-					   //                      .attr("class", "y axis");
 			        
 			        var ticks = svg.selectAll("tick")
 			        			   .data(data.series)
@@ -667,14 +646,12 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 									return "red";
 								})
 								.on('mouseover', function (d) {
-									d3.select(this).transition().duration(200).style('stroke', 'red').style('stroke-width', '2px');
+									d3.select(this).attr("cursor", "pointer");
 									scope.$apply();
 								})
 								.on('mouseleave', function (d) {
-									d3.select(this).transition().duration(200).style('stroke', '').style('stroke-width', '');
 									scope.$apply();
 								}).on('mousemove', function (d) {
-									// updateToolTip(d3.event);
 								}).on('click', function (d) {
 									// this will cause the expand and animation
 									collapseAll(d);
@@ -731,6 +708,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		         	}
 		         	var circles = svg.selectAll("circle");
 		         	var groups = svg.selectAll("rect");
+		         	var newCircles = NaN;
 
 					//Render X axis
 					svg.append("g")
@@ -745,19 +723,18 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 						*/
 						function collapseAll(d){
 							if(!viewingGroup){//not viewing yet
-							//Remove all the extra parts
-								//remove extra clusters
 								svg.selectAll("rect")
 									.filter(function(datum){
 										return datum != d;
 									}).transition()
+								.duration(750)
 								.style("opacity", 0)
 								.attr("y", height);
 								//remove extra ticks and texts
 								ticks.filter(function(datum){
-										console.log(datum, d.input);
 										return datum != d.input;
 									}).transition()
+									.duration(750)
 									.style("opacity", 0)
 									.attr("y1", height)
 									.attr("y2", height);
@@ -765,37 +742,46 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 								text.filter(function(datum){
 									return datum != d.input;
 								}).transition()
+								.duration(750)
 								.attr("y", height)
 								.style("opacity", 0);
 
-							circles.transition()
-								.attr("cy", height)
-								.style("opacity", 0);
+								circles.transition()
+									.duration(750)
+									.attr("cy", height)
+									.style("opacity", 0);
 
-							//center other parts 
+								//center other parts 
 								svg.selectAll("rect")
 									.filter(function(datum){
 										return datum == d;
 									}).transition()
-								.attr("y", height/2);
+									.duration(750)	
+									.attr("y", height-30);
 								//remove extra ticks and texts
 								ticks.filter(function(datum){
-										console.log(datum, d.input);
 										return datum == d.input;
 									}).transition()
-									.attr("y1", height/2)
-									.attr("y2", height/2);
+									.duration(750)
+									.attr("y1", height)
+									.attr("y2", height);
 								//remove extra text labels
 								text.filter(function(datum){
 									return datum == d.input;
 								}).transition()
-								.attr("y", (height/2)-5);
+								.duration(750)
+								.attr("y", (margin.top));
 
-							viewingGroup = true;
+								//append other values
+								makeSubtimeline(d);
+
+								viewingGroup = true;
 							}
 							else{
 								// restore
+
 							ticks.transition()
+								.duration(750)
 								.attr("y1", function(d){
 									return getYPos(d);	
 								})
@@ -804,25 +790,103 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 								})
 								.style("opacity", 1);
 							text.transition()
+								.duration(750)
 								.attr("y", function(d){
 									return getYPos(d)-5;
 								})
 								.style("opacity", 1);
 							circles.transition()
+								.duration(750)
 								.attr("cy", function(d){
 									return getYPos(d.input);
 								})
 								.style("opacity", 1);
 							groups.transition()
+								.duration(750)
 								.attr("y", function(d){
 									return getYPos(d.input);
 								})
 								.style("opacity", 1);
+							removeSubtimeline();
+							
 
 							viewingGroup = false;
 							}
-
 						}
+
+					function makeSubtimeline(data){
+						console.log("making subtimeline", data);
+						var begin = _.first(data.values).time; //get the beginning time
+				    	var end = _.last(data.values).time;
+				    	var factor = (1/(end - begin)) * (width - (margin.left+50) - (margin.right-50));
+				    	console.log(begin, end, factor);
+						var xScale2 = d3.time.scale()
+							       .domain([begin, end])
+							       .range([margin.left + 50, width - margin.right - 50]);
+
+						var xAxis2 = d3.svg.axis()
+							       	  .scale(xScale2)
+							          .orient(orient);
+
+						svg.append("g")
+						   .attr("class", "x axis")
+						   .attr("id", "subtimeline")
+						   .attr("transform", "translate(0," + (2*height/3+50) + ")") //controls the height of the timeline
+						   .call(xAxis2)
+						   .style("opacity", 0)
+						   .transition()
+						   	.delay(100)
+							.duration(750)
+							.style("opacity", 1);
+
+
+						svg.selectAll("temps")
+							.data(data.values)
+							.enter()
+							.append("circle")
+							.attr("id", "subtimeline")
+							.attr("cx", function(datum){
+								return xScale2(datum.time);
+							} )
+							.attr("cy", 2*height/3)
+							.attr("r", 0)
+							.style("fill", function(d){
+									return getColor(d);
+								})
+							.on('mouseover', function (d) {
+									makeToolTip(d, d3.event);
+									d3.select(this).transition().duration(200).style('stroke', 'red').style('stroke-width', '2px');
+									scope.$apply();
+								})
+								.on('mouseleave', function (d) {
+									removeToolTip();
+									d3.select(this).transition().duration(200).style('stroke', '').style('stroke-width', '');
+									scope.$apply();
+								}).on('mousemove', function (d) {
+									updateToolTip(d3.event);
+								}).on('click', function (d) {
+									scope.$apply();
+								})
+															.transition()
+									.duration(function(d,i){
+										return 750 + (i*25);
+									})
+									.ease('linear')
+									.attr("r", function(d) {
+										return getRadius(d);
+									});
+
+						
+
+					}
+
+					function removeSubtimeline(){
+						svg.selectAll("#subtimeline")
+							.transition()
+							.duration(300)
+							.style("opacity", 0)
+						.remove();
+					}
 
 	    			/**
 				    * Takes index and returns a color value
@@ -862,7 +926,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				    */
 				    function makeToolTip(data, event) {
 				    	var date = new Date(data.time)
-				        data = "Source: " + data.source + "<br> Date: " + formatDate(date) + "<br> Time: " + data.time + "<br> Weight: " + data.weight;
+				        data = "Source: " + data.source + "<br> Date: " + formatDate(date) + "<br> Weight: " + data.weight;
 				        angular.element('<p id="tooltip" style="' + tooltip + '"></p>').html(data).appendTo('body').fadeIn('slow').css({
 				        left: event.pageX + 20,
 				        top: event.pageY - 30
