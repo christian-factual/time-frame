@@ -448,7 +448,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			          tickTime: d3.time.month,
 			          tickInterval: 3,
 			          tickSize: 6 },
-			        colorCycle = d3.scale.category20(),
+			        colorCycle = d3.scale.category20b(),
 			        beginning = 0,
 			        ending = 0,
 			        margin = {top: 20, right: 40, bottom: 30, left: 50},
@@ -548,20 +548,10 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 	        			var secondR = getXPos(value) - getRadius(value);
 
 	        			if(_.size(group.values)>10){//if the group is getting large
-
-	        				if(value.source == "yellowbook.com"){
-	        					console.log("Look here", value);
-	        					console.log("*****************");
-	        					console.log(times);
-	        				}
-	        				console.log(value)
 	        				var times = _.map(group.values, function(val){return val.time;});
 	        				times.push(value.time); //add the new value
 	        				var dev = calculateStdDev( times ); //calculate the std dev
 	        				var avg = _.reduce(times, function(memo, num){return num+memo;}, 0)/_.size(times);
-	        				if(value.source == "yellowbook.com"){
-	        					console.log(value.time, dev, avg);	
-	        				}
 	        				if(value.time - avg > dev ){//make a new group
 	        					group = {
 		        					input: value.input,
@@ -660,13 +650,10 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					                .attr("font-size", "11px")
 		         				    .attr("fill", "black");     			   
 
-		         	console.log("*******************************Attempting to append circles!");
-
 		         	for(var index=0; index<groupData.length; index=index+1){
 		         		var entry = groupData[index];
 		         		
 		         		if(entry.count > 1){//case that it is a group
-		         			console.log("This is a group");
 		         			svg.append("rect")
 		         				.datum(entry)
 		         				.attr("x", function(d) {
@@ -695,7 +682,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 								})
 								.transition()
 									.duration(function(d,i){
-										return 750 + (i*25);
+										return 750 + (index*25);
 									})
 									.ease('linear')
 									.attr("width", function(d) {
@@ -735,7 +722,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 								})
 								.transition()
 									.duration(function(d,i){
-										return 750 + (i*25);
+										return 750 + (index*25);
 									})
 									.ease('linear')
 									.attr("r", function(d) {
@@ -808,10 +795,8 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 								}).transition()
 								.duration(750)
 								.attr("y", (margin.top));
-
 								//append other values
 								makeSubtimeline(d);
-
 								viewingGroup = true;
 							}
 							else{
@@ -845,14 +830,11 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 								})
 								.style("opacity", 1);
 							removeSubtimeline();
-							
-
 							viewingGroup = false;
 							}
 						}
 
 					function makeSubtimeline(data){
-						console.log("making subtimeline", data);
 						var bufferTime = (_.last(data.values).time - _.first(data.values).time)/8;
 						var begin = _.first(data.values).time - bufferTime; //get the beginning time
 				    	var end = _.last(data.values).time + bufferTime;
@@ -904,7 +886,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 								}).on('click', function (d) {
 									scope.$apply();
 								})
-															.transition()
+								.transition()
 									.duration(function(d,i){
 										return 750 + (i*25);
 									})
@@ -912,9 +894,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 									.attr("r", function(d) {
 										return getRadius(d);
 									});
-
-						
-
 					}
 
 					function removeSubtimeline(){
@@ -1018,14 +997,13 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
       					return (num-avg)*(num-avg);
       				})
       				var stdDev = Math.sqrt(_.reduce(squares, function(memo, num){return num+memo;}, 0)/_.size(arr));
-      				console.log("average: ", avg, "Standard Dev: ", stdDev);
       				return stdDev;
       			}
 			   // watches
 			    //Watch 'data' and run scope.render(newVal) whenever it changes
         		scope.$watch('timelineInfo', function(){
         			render(scope.timelineInfo);
-        		}, false);  
+        		}, true);  
 
 				})();
 			}
