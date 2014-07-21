@@ -429,7 +429,6 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			});
 		};
 	})
-
 .directive('timelineD3', [
 	'$window',
 	function ($window) {
