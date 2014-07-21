@@ -63,14 +63,15 @@
 				<label>Chart Types</label>
 				<select ng-model='chartType'>
 					<option value="pie">Pie</option>
-					<option value="sBar">Bar</option>
+					<option value="timeline">Timeline</option>
 				</select>
 			</div>
 				<label>Commit Attribute Weights: {{activeTab}}</label>
 				<div id="chart">
 					<div ac-chart="chartType" ac-data="data" ac-config="config" id='chart' class='chart' ng-show="chartType==='pie'"></div>
-					<div ac-chart="chartType" ac-data="data" ac-config="config" id='chart' class='chart' ng-show="chartType==='sBar'"></div>
+					<timeline-D3 tl-data="timelineInfo" ng-show="chartType==='timeline'"></timeline-D3>
 				</div>
+				
 			</div>
 		</div>
 		<br>
@@ -108,11 +109,11 @@
 			</div>
 		</div>
 	</div>
-	<button type="button" ng-click="makeQcall()">Q Call Button</button>
+<!--	<button type="button" ng-click="makeQcall()">Q Call Button</button>
 	<div id="random">
-		<!-- this is the directive -->
 		<timeline-D3 tl-data="timelineInfo"></timeline-D3>
-	</div>
+	</div> 
+-->
 	<!-- Loading in all the JS files: angular, D3, jQuery-->
 	<script type="text/javascript" src="./js/angular.min.js"></script>
 	<script type="text/javascript" src="./js/angular-charts.js"></script>

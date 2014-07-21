@@ -427,6 +427,11 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				//set content
 				$scope.assignContentText(inputReportCleaner.generateContentText($scope.activeTab));
 			});
+			UUIDapiService.callDSApi($scope.inputID, function(returnJSON){
+				//set timeline info
+				$scope.timelineInfo = UUIDCleaner.generateTimelineInfo($scope.activeTab);
+			});
+
 		};
 	})
 .directive('timelineD3', [
