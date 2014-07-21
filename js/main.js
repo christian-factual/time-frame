@@ -39,7 +39,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				_commitID= 'peets_input_report.json';
 			}
 			else{
-				_commitID = ID;
+				_commitID = ID + '.json';
 			}
 		}
 		/** Getter for the commit ID variable
@@ -209,6 +209,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 				_UUID= 'test';
 			}
 			else{
+				console.log("using ID: ", ID);
 				_UUID = ID;
 			}
 		}
@@ -220,7 +221,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		* Returns:
 		**/
 		this.callDSApi = function(url, callback){
-			// this.setUUID(url);
+			this.setUUID(url);
 			makeURLs();
 			var deferred = $q.defer();
 			var calls = [
@@ -300,6 +301,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 						inputJSON = {};
 					//Use the key to find the source, md5 value & timestamp
 					var keyParts = key.split(",");
+					console.log(keyParts);
 					//pull time stamp; get ts string, split on ':', pull second half
 					timeStamp = parseInt(_.last(keyParts).split(':')[1]);
 					keyParts.pop();//remove time stamp
@@ -308,6 +310,11 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					keyParts.pop(); //remove md5 string
 					//repeat for source
 					source = _.last(keyParts).split(':')[1];//done; could repeat for user or origin
+					console.log("Key parts: ", keyParts);
+					if(keyParts[0].split(":")[0] == 'user'){
+						//have a user
+						source = keyParts[0].split(":")[1] + ' ' + source; 
+					}
 					//now have source, ts & md5.
 
 					//use md5 to get input
@@ -320,6 +327,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 						break;
 					}
 					//case that we got the JSON
+					console.log("This is the current input: ", inputJSON);
 					userPayload = inputJSON.payload[field];
 					weight = allInputs[key][field].total_field_weight;
 					if(weight == 0){
@@ -371,21 +379,21 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		//scope.data information that is set.
 		$scope.data = {}; //Data for the pie
 
-		//*************************
-		//All the information used for the timeline
-		//temp variable
-		$scope.timelineInfo = NaN;
+		// //*************************
+		// //All the information used for the timeline
+		// //temp variable
+		// $scope.timelineInfo = NaN;
 
-		//temp function
-		$scope.makeQcall = function(){
-			UUIDapiService.callDSApi($scope.inputID, function(returnJSON){
-				//set timeline info
-				$scope.timelineInfo = UUIDCleaner.generateTimelineInfo($scope.activeTab);
-			});
+		// //temp function
+		// $scope.makeQcall = function(){
+		// 	UUIDapiService.callDSApi($scope.inputID, function(returnJSON){
+		// 		//set timeline info
+		// 		$scope.timelineInfo = UUIDCleaner.generateTimelineInfo($scope.activeTab);
+		// 	});
 
-		}
+		// }
 
-		//*************************
+		// //*************************
 
 		//Method is called when the attribute toggle on the html page
 		//is clicked. This updates the page to the attribute and calls 
@@ -661,7 +669,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 									return xScale(d.time);
 								})
 								.attr("y", function(d){
-									return getYPos(d.input);
+									return getYPos(d.input)-5;
 								})
 								.attr("width", 10)
 								.attr("height", 10)
@@ -682,7 +690,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 								})
 								.transition()
 									.duration(function(d,i){
-										return 750 + (index*25);
+										return 750 + (index*20);
 									})
 									.ease('linear')
 									.attr("width", function(d) {
@@ -722,7 +730,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 								})
 								.transition()
 									.duration(function(d,i){
-										return 750 + (index*25);
+										return 750 + (index*20);
 									})
 									.ease('linear')
 									.attr("r", function(d) {
@@ -826,7 +834,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 							groups.transition()
 								.duration(750)
 								.attr("y", function(d){
-									return getYPos(d.input);
+									return getYPos(d.input)-5;
 								})
 								.style("opacity", 1);
 							removeSubtimeline();
