@@ -1103,7 +1103,7 @@ angular.module("left", []).run(["$templateCache", function($templateCache) {
     "</style>\n" +
     "\n" +
     "<div class='ac-title' style='font-weight: bold;font-size: 1.2em;'>{{acConfig.title}}</div>\n" +
-    "<div class='ac-legend' style='float:left; max-width:25%;' ng-show='{{acConfig.legend.display}}'>\n" +
+    "<div class='ac-legend' style='float:left; max-width:25%;'>\n" +
     "	<table style='list-style:none;margin:0px;padding:0px;'>\n" +
     "	<tr ng-repeat=\"l in legends\">\n" +
     "		<td><div ng-attr-style='background:{{l.color}}; height:15px;width:15px;'></div></td>\n" +
