@@ -322,7 +322,10 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					//case that we got the JSON
 					userPayload = inputJSON.payload[field];
 					weight = allInputs[key][field].total_field_weight;
-					weight = weight==0 ? 1 : weight;//make all the 0 fields into 1s
+					if(weight == 0){
+						continue;//skip those values
+					}
+					// weight = weight==0 ? 11 : weight;//make all the 0 fields into 1s
 
 					//now have all the values; need to put together & push onto array
 					series.push(userPayload);
@@ -426,6 +429,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 			});
 		};
 	})
+
 .directive('timelineD3', [
 	'$window',
 	function ($window) {
@@ -483,8 +487,10 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 					data.values = _.sortBy(data.values, function(entry){return Math.min(entry.time)});
 					largest = _.max(data.values, function(entry){return entry.weight}).weight;
 
-				    beginning = _.first(data.values).time -10000000000; //get the beginning time
-				    ending = _.last(data.values).time + 5000000000;
+					var bufferTime = (_.last(data.values).time - _.first(data.values).time)/8;
+
+				    beginning = _.first(data.values).time -bufferTime; //get the beginning time
+				    ending = _.last(data.values).time + bufferTime;
 
 				    var w = angular.element($window);
 				    // w.bind('resize', function (ev) {
@@ -536,9 +542,36 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 	        			//check if the value belongs in the group before it
 	        			var firstR = getXPos(prevVal) + getRadius(prevVal);
 	        			var secondR = getXPos(value) - getRadius(value);
-	        			if( firstR > secondR ){//case that they should be grouped
+
+	        			if(_.size(group.values)>10){//if the group is getting large
+
+	        				if(value.source == "yellowbook.com"){
+	        					console.log("Look here", value);
+	        					console.log("*****************");
+	        					console.log(times);
+	        				}
+	        				console.log(value)
+	        				var times = _.map(group.values, function(val){return val.time;});
+	        				times.push(value.time); //add the new value
+	        				var dev = calculateStdDev( times ); //calculate the std dev
+	        				var avg = _.reduce(times, function(memo, num){return num+memo;}, 0)/_.size(times);
+	        				if(value.source == "yellowbook.com"){
+	        					console.log(value.time, dev, avg);	
+	        				}
+	        				if(value.time - avg > dev ){//make a new group
+	        					group = {
+		        					input: value.input,
+		        					time: value.time,
+		        					count: 1,
+		        					values: [value]
+		        				}
+		        				workingSeries.push(group);
+	        				}
+		        			continue;
+		        		}
+	        			if( firstR > secondR+25 ){//case that they should be grouped
 	        				group.values.push(value);
-	        				group.count = group.values.length;
+        					group.count = group.values.length;
 	        			}
 	        			else{//case they the new value doesnt fall in the group
 	        				group = {
@@ -634,16 +667,16 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		         				.datum(entry)
 		         				.attr("x", function(d) {
 
-									return getXPos(d);
+									return xScale(d.time);
 								})
 								.attr("y", function(d){
 									return getYPos(d.input);
 								})
 								.attr("width", 10)
 								.attr("height", 10)
-								.style("fill", function(d){
-									// return getColor(d);
-									return "red";
+								.style("fill", function(d, i){
+									return colorCycle(index);
+									// return "red";
 								})
 								.on('mouseover', function (d) {
 									d3.select(this).attr("cursor", "pointer");
@@ -673,7 +706,7 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 		         			svg.append("circle")
 		         				.datum(entry.values[0])
 								.attr("cx", function(d) {
-									return getXPos(d);
+									return xScale(d.time);
 								})
 								.attr("cy", function(d){
 									return getYPos(d.input);
@@ -816,10 +849,10 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 
 					function makeSubtimeline(data){
 						console.log("making subtimeline", data);
-						var begin = _.first(data.values).time; //get the beginning time
-				    	var end = _.last(data.values).time;
-				    	var factor = (1/(end - begin)) * (width - (margin.left+50) - (margin.right-50));
-				    	console.log(begin, end, factor);
+						var bufferTime = (_.last(data.values).time - _.first(data.values).time)/8;
+						var begin = _.first(data.values).time - bufferTime; //get the beginning time
+				    	var end = _.last(data.values).time + bufferTime;
+				    	// var factor = (1/(end - begin)) * (width - (margin.left+50) - (margin.right-50));
 						var xScale2 = d3.time.scale()
 							       .domain([begin, end])
 							       .range([margin.left + 50, width - margin.right - 50]);
@@ -973,6 +1006,16 @@ var timeframeModule = angular.module('timeframe',['angularCharts'])
 
       			function getRadius(d){
       				return 20*(d.weight/largest)
+      			}
+
+      			function calculateStdDev(arr){
+					var avg = _.reduce(arr, function(memo, num){return num+memo;}, 0)/_.size(arr);
+      				var squares = _.map(arr, function(num){
+      					return (num-avg)*(num-avg);
+      				})
+      				var stdDev = Math.sqrt(_.reduce(squares, function(memo, num){return num+memo;}, 0)/_.size(arr));
+      				console.log("average: ", avg, "Standard Dev: ", stdDev);
+      				return stdDev;
       			}
 			   // watches
 			    //Watch 'data' and run scope.render(newVal) whenever it changes
