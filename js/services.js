@@ -283,7 +283,6 @@ angular.module('services', [])
 						inputJSON = {};
 					//Use the key to find the source, md5 value & timestamp
 					var keyParts = key.split(",");
-					console.log(keyParts);
 					//pull time stamp; get ts string, split on ':', pull second half
 					timeStamp = parseInt(_.last(keyParts).split(':')[1]);
 					keyParts.pop();//remove time stamp
@@ -292,7 +291,6 @@ angular.module('services', [])
 					keyParts.pop(); //remove md5 string
 					//repeat for source
 					source = _.last(keyParts).split(':')[1];//done; could repeat for user or origin
-					console.log("Key parts: ", keyParts);
 					if(keyParts[0].split(":")[0] == 'user'){
 						//have a user
 						source = keyParts[0].split(":")[1] + ' ' + source; 
@@ -309,7 +307,6 @@ angular.module('services', [])
 						break;
 					}
 					//case that we got the JSON
-					console.log("This is the current input: ", inputJSON);
 					userPayload = inputJSON.payload[field];
 					weight = allInputs[key][field].total_field_weight;
 					if(weight == 0){

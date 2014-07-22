@@ -59,11 +59,8 @@ var timeframeModule = angular.module('timeframe',['angularCharts', 'filters', 's
 			commitIDapiService.callDSApi($scope.inputID, function(error, returnJSON){
 				//set table info
 				other = returnJSON;
-				$scope.tableInfo = inputReportCleaner.generateTableInfo();
 				//set chart info
 				$scope.data = inputReportCleaner.generateChartInfo($scope.activeTab);
-				//set content
-				$scope.assignContentText(inputReportCleaner.generateContentText($scope.activeTab));
 			});
 			UUIDapiService.callDSApi($scope.inputID, function(returnJSON){
 				//set timeline info

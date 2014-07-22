@@ -7,104 +7,53 @@
 	<link rel="stylesheet" type="text/css" href="./css/index.css">
 	<script type="text/javascript" src="./js/resources/d3.min.js" charset="utf-8"></script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<title>Time Frame Visualization</title>
 </head>
 
-<body ng-app="timeframe"  ng-controller="pageCtrl">
+<body ng-app="timeframe" ng-controller="pageCtrl">
 	<div id="headerContainer">
-		<div id="title"> 
-			<h1>Time Frame Visualization</h1>
-		</div>
-		<hr>
-		<div id="subHeaderContainer">
-			<div class="row">
-				<div class="input-group col-md-5 col-md-offset-7">
-					<input type="text" placeholder="ID" class="form-control" ng-model="inputID">
-					<span class="input-group-btn">
-						<button class="btn btn-default"type="button" ng-click="getJSON()">
-							<span class="glyphicon glyphicon-stats"></span>
-						</button>
-					</span>
-				</div>
+		<div class="row">
+				<div id="menuBar" class="col-md-7 row" ng-model='activeTab'>
+					<div class="btn-group btn-group-justified">
+						<div class="btn-group" ng-repeat="attrib in mainAttribs">
+							<button type="button" class="btn btn-default" value="{{attrib}}" ng-click="selectAttrib($event)">{{attrib}}</button>
+						</div>
+						<div class="btn-group">
+							<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+								More Fields
+								<span class="caret"></span>
+							</button>
+							<ul id="menuBarDropdown" class="dropdown-menu">
+								<li>
+									<div id="menuBarDropdownContainer"class="dropdown-menu btn-group btn-group-vertical" ng-repeat="attrib in otherAttribs">
+										<button type="button" class="btn btn-default" value="{{attrib}}" ng-click="selectAttrib($event)">{{attrib}}</button>
+									</div>
+								</li>
+							</ul>
+						</div>
+					</div>
+			</div>
+			<div class="input-group col-md-4 col-md-offset-8">
+				<input type="text" placeholder="ID" class="form-control" ng-model="inputID">
+				<span class="input-group-btn">
+					<button class="btn btn-default"type="button" ng-click="getJSON()">
+						<span class="glyphicon glyphicon-stats"></span>
+					</button>
+				</span>
 			</div>
 		</div>
 	</div>
 	<br>
 	<div id="mainContainer" class="container-fluid">
-		<h5 style="float:left">Attribute Summarizers</h5>
-		<div id="menuBar" class="row" ng-model='activeTab'>
-			<div class="btn-group btn-group-justified">
-				<div class="btn-group" ng-repeat="attrib in mainAttribs">
-					<button type="button" class="btn btn-default" value="{{attrib}}" ng-click="selectAttrib($event)">{{attrib}}</button>
-				</div>
-				<div class="btn-group">
-					<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-						More Fields
-						<span class="caret"></span>
-					</button>
-					<ul id="menuBarDropdown" class="dropdown-menu">
-						<li>
-							<div id="menuBarDropdownContainer"class="dropdown-menu btn-group btn-group-vertical" ng-repeat="attrib in otherAttribs">
-								<button type="button" class="btn btn-default" value="{{attrib}}" ng-click="selectAttrib($event)">{{attrib}}</button>
-							</div>
-						</li>
-					</ul>
-				</div>
-			</div>
-		</div>
-		<div id="YextIndicator" class="row" ng-show="tableInfo.hasOwnProperty('yext_id')">
-			<div class="col-md-3 col-md-offset-10">
-				<div class="alert alert-info" style="position:absolute"> Yext Powered Listing</div>
-			</div>
-		</div>
-
 		<div id="topContainer">
-			<div id="topContent">
-				<div>
-				<label>Chart Types</label>
-				<select ng-model='chartType'>
-					<option value="pie">Pie</option>
-					<option value="timeline">Timeline</option>
-				</select>
-			</div>
-				<label>Commit Attribute Weights: {{activeTab}}</label>
-				<div id="chart" ng-show="chartType==='pie'">
-					<div ac-chart="chartType" ac-data="data" ac-config="config" id='chart' class='chart'></div>
-				</div>
-				<timeline-D3 tl-data="timelineInfo" ng-show="chartType==='timeline'"></timeline-D3>
+			<label>Commit Attribute Weights: {{activeTab}}</label>
+				<timeline-D3 tl-data="timelineInfo"></timeline-D3>
 			</div>
 		</div>
 		<br>
 		<div id="midContainer">
-			<div id="midContent" style="padding:20px;">
-				<p>User Input: <b>{{userInput}}</b></p>
-				<p>Explanation: <b>{{explain}}</b></p>
-				<br>
-				<p>Largest Weight: <b>{{highestW}}</b></p>
-				<p>Total Weight: <b>{{totalW}}</b></p>
-				<p>Confidence: <b>{{confidence}}</b></p>
-			</div>		
-		</div>
-		<div id="bottomContainer">
-			<div id="bottomContent" >
-				<h5>Attribute Progression</h5>
-				<table id="progress" class="table table-bordered table-striped table-condensed">
-					<thead>
-						<tr>
-							<th class="col-md-3">Attribute</th>
-							<th class="col-md-3">Raw Input</th>
-							<th class="col-md-3">Cleaned Input</th>
-							<th class="col-md-3">Summary</th>
-						</tr>
-					</thead>
-					<tbody id="summaryTable">
-						<tr ng-repeat="(key, value) in tableInfo">
-							<td>{{key|splitCap}}</td>
-							<td>{{value[0]}}</td>
-							<td>{{value[1]}}</td>
-							<td>{{value[2]}}</td>
-						</tr>
-					</tbody>
-				</table>
+			<div id="chart">
+				<div ac-chart="chartType" ac-data="data" ac-config="config" id='chart' class='chart'></div>
 			</div>
 		</div>
 	</div>

@@ -13,7 +13,7 @@ angular.module('directives', [])
 				          tickTime: d3.time.month,
 				          tickInterval: 3,
 				          tickSize: 6 },
-				        colorCycle = d3.scale.category20b(),
+				        colorCycle = d3.scale.category20(),
 				        beginning = 0,
 				        ending = 0,
 				        margin = {top: 20, right: 40, bottom: 30, left: 50},
@@ -151,15 +151,13 @@ angular.module('directives', [])
 		        	/*
 		        	*/
 		        	var render = function(data){
-						console.log("render called using data: ", data);
 
-						if(_.isNaN(data)){//check and make sure we have some data
+						if(_.isUndefined(data)){//check and make sure we have some data
 							return;
 						}
 
 						initVars(data);
 						var groupData = formGroups(data);
-						console.log("group Data: ", groupData);
 
 						svg.selectAll("*").remove();//empty previous SVG
 
@@ -194,8 +192,24 @@ angular.module('directives', [])
 				                       .attr("y2", function(d){
 				                       		return getYPos(d);
 				                       })	
-				                       .attr("stroke-width", 1)
-				                       .attr("stroke", "grey");	   
+				                       .attr("stroke-width", "2px")
+				                       .attr("stroke", "grey")
+				                       .on('mouseover', function (d) {
+											d3.select(this)
+												.transition()
+													.duration(200)
+													.style('stroke', colorCycle(_.indexOf(data.series, d)))
+													.style('stroke-width', '4px');
+											scope.$apply();
+										})
+				                       .on('mouseleave', function (d) {
+				                       	d3.select(this)
+				                       		.transition()
+				                       			.duration(200)
+				                       			.style('stroke', '')
+				                       			.style('stroke-width', '2px');
+										scope.$apply();
+									});	   
 
 				        //Add the SVG Text Element to the svgContainer
 						var text = svg.selectAll("label")
@@ -206,7 +220,7 @@ angular.module('directives', [])
 						                 	return 0;
 						             	})
 						                .attr("y", function(d) { 
-						                 	return getYPos(d)-5; 
+						                 	return getYPos(d); 
 						                 })
 						                .text( function (d) { 
 						                	return d; 
@@ -243,7 +257,6 @@ angular.module('directives', [])
 									.attr("height", 10)
 									.style("fill", function(d, i){
 										return colorCycle(index);
-										// return "red";
 									})
 									.on('mouseover', function (d) {
 										d3.select(this).attr("cursor", "pointer");
