@@ -227,25 +227,15 @@ angular.module('directives', [])
 						                })
 						                .attr("font-family", "sans-serif")
 						                .attr("font-size", "11px")
-			         				    .attr("fill", "black");     			   
+			         				    .attr("fill", "black");   			   
 
 			         	for(var index=0; index<groupData.length; index=index+1){
 			         		var entry = groupData[index];
 			         		
 			         		if(entry.count > 1){//case that it is a group
-			         			// svg.append("path")
-			         			// 	.datum(entry)
-			         			// 	.attr("transform", function(d){
-			         					
-			         			// 		var trans = "translate(" + Math.round(xScale(d.time)) + "," + getYPos(d.input) + ")";
-			         			// 		console.log(trans);
-			         			// 		return trans;
-			         			// 	})
-			         			// 	.attr("d", d3.svg.symbol().type("triangle-up"))
-			         			// 	;
-
 			         			svg.append("rect")
 			         				.datum(entry)
+			         				.attr("id", "group")
 			         				.attr("x", function(d) {
 
 										return xScale(d.time);
@@ -320,7 +310,7 @@ angular.module('directives', [])
 			         		}
 			         	}
 			         	var circles = svg.selectAll("circle");
-			         	var groups = svg.selectAll("rect");
+			         	var groups = svg.selectAll("#group");
 			         	var newCircles = NaN;
 
 						//Render X axis
@@ -336,7 +326,7 @@ angular.module('directives', [])
 							*/
 							function collapseAll(d){
 								if(!viewingGroup){//not viewing yet
-									svg.selectAll("rect")
+									svg.selectAll("#group")
 										.filter(function(datum){
 											return datum != d;
 										}).transition()
@@ -365,7 +355,7 @@ angular.module('directives', [])
 										.style("opacity", 0);
 
 									//center other parts 
-									svg.selectAll("rect")
+									svg.selectAll("#group")
 										.filter(function(datum){
 											return datum == d;
 										}).transition()
