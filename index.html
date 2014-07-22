@@ -5,7 +5,7 @@
 	<link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
 	<!-- <link rel="stylesheet" type="text/css" href="./css/bootstrap-theme.min.css"> -->
 	<link rel="stylesheet" type="text/css" href="./css/index.css">
-	<script type="text/javascript" src="./js/d3.min.js" charset="utf-8"></script>
+	<script type="text/javascript" src="./js/resources/d3.min.js" charset="utf-8"></script>
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 </head>
 
@@ -18,7 +18,7 @@
 		<div id="subHeaderContainer">
 			<div class="row">
 				<div class="input-group col-md-5 col-md-offset-7">
-					<input type="text" placeholder="Commit_ID" class="form-control" ng-model="inputID">
+					<input type="text" placeholder="ID" class="form-control" ng-model="inputID">
 					<span class="input-group-btn">
 						<button class="btn btn-default"type="button" ng-click="getJSON()">
 							<span class="glyphicon glyphicon-stats"></span>
@@ -109,10 +109,13 @@
 		</div>
 	</div>
 	<!-- Loading in all the JS files: angular, D3, jQuery-->
-	<script type="text/javascript" src="./js/angular.min.js"></script>
-	<script type="text/javascript" src="./js/angular-charts.js"></script>
-	<script type="text/javascript" src="./js/underscore.min.js"></script>
-	<script type="text/javascript" src="./js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="./js/resources/angular.min.js"></script>
+	<script type="text/javascript" src="./js/resources/angular-charts.js"></script>
+	<script type="text/javascript" src="./js/resources/underscore.min.js"></script>
+	<script type="text/javascript" src="./js/resources/bootstrap.min.js"></script>
+	<script type="text/javascript" src="./js/filters.js"></script>
+	<script type="text/javascript" src="./js/services.js"></script>
+	<script type="text/javascript" src="./js/directives.js"></script>
 	<script type="text/javascript" src="./js/main.js"></script>
 </body>
 
