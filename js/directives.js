@@ -219,6 +219,17 @@ angular.module('directives', [])
 			         		var entry = groupData[index];
 			         		
 			         		if(entry.count > 1){//case that it is a group
+			         			// svg.append("path")
+			         			// 	.datum(entry)
+			         			// 	.attr("transform", function(d){
+			         					
+			         			// 		var trans = "translate(" + Math.round(xScale(d.time)) + "," + getYPos(d.input) + ")";
+			         			// 		console.log(trans);
+			         			// 		return trans;
+			         			// 	})
+			         			// 	.attr("d", d3.svg.symbol().type("triangle-up"))
+			         			// 	;
+
 			         			svg.append("rect")
 			         				.datum(entry)
 			         				.attr("x", function(d) {
