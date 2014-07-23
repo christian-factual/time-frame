@@ -11,11 +11,6 @@ body {
 	padding: 0;
 }
 
-#YextIndicator{
-	margin-top: 10px;
-	text-align: center;
-}
-
 #commitID{
 	white-space: nowrap;
 	overflow: hidden;              /* "overflow" value must be different from  visible"*/ 
@@ -29,15 +24,13 @@ body {
 	height:400px;
 }
 #topContainer{
-	height:400px;
 	margin-bottom: 50px;
 }
 
-#bottomContainer{
-	margin-top: 10px;
-}
 #midContainer{
+	height:400px;
 	margin-top: 10px;
+	margin-bottom: 10px;
 	padding: 30px;
 	width: 100%;
 }

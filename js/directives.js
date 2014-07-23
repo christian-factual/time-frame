@@ -1,3 +1,4 @@
+var thing;
 angular.module('directives', [])
 	.directive('timelineD3', [
 		'$window',
@@ -33,7 +34,7 @@ angular.module('directives', [])
 					var assignHeights = function(data){
 						var temp = {};
 						var totalTicks = data.series.length;
-						var totalHeight = height - 50 - margin.bottom; //25 buffer from top & bottom
+						var totalHeight = height - 20 - margin.bottom; //20 buffer from top & bottom
 						var spacing = totalHeight/(totalTicks-1); 
 
 						if(totalTicks==1){
@@ -43,7 +44,7 @@ angular.module('directives', [])
 						}
 						else{
 							for(var i=0; i<totalTicks; i+=1){
-								temp[data.series[i]] = (spacing * i)+(25+margin.top);
+								temp[data.series[i]] = (spacing * i)+(10+margin.top);
 							}
 						}
 						
@@ -62,18 +63,21 @@ angular.module('directives', [])
 					    ending = _.last(data.values).time + bufferTime;
 
 					    var w = angular.element($window);
-					    // w.bind('resize', function (ev) {
-					    // 		totalWidth = w.width();
-					    // 		console.log("Total Width: ", totalWidth);
-					    // 		totalHeight = element.height();
-					    // });
 
 						//Set margins, width, and height
 						width = angular.element($window).width() - 28 - margin.left - margin.right,
-						height = 400 - margin.top - margin.bottom;
+						height = setHeight(data);
 						scaleFactor= (1/(ending - beginning)) * (width - margin.left - margin.right);
 						//initialize the item heights
 						_tickHeights = assignHeights(data);
+		        	}
+
+		        	function setHeight(data){
+		        		console.log("This is the data you're looking at: ", data);
+		        		console.log("All the inputs: ", data.series.length);
+		        		var height = 400 - margin.top - margin.bottom;
+		        		var other = data.series.length*700/25;
+		        		return Math.max(height, other);
 		        	}
 
 					/**
@@ -230,18 +234,16 @@ angular.module('directives', [])
 			         				    .attr("fill", "black");   			   
 
 			         	for(var index=0; index<groupData.length; index=index+1){
-			         		var entry = groupData[index];
-			         		
+			         		var entry = groupData[index];         		
 			         		if(entry.count > 1){//case that it is a group
 			         			svg.append("rect")
 			         				.datum(entry)
 			         				.attr("id", "group")
 			         				.attr("x", function(d) {
-
 										return xScale(d.time);
 									})
 									.attr("y", function(d){
-										return getYPos(d.input)-5;
+										return getYPos(d.input);
 									})
 									.attr("width", 10)
 									.attr("height", 10)
@@ -256,8 +258,7 @@ angular.module('directives', [])
 										scope.$apply();
 									}).on('mousemove', function (d) {
 									}).on('click', function (d) {
-										// this will cause the expand and animation
-										collapseAll(d);
+										collapseAll(d); // this will cause the expand and animation
 									})
 									.transition()
 										.duration(function(d,i){
@@ -393,7 +394,7 @@ angular.module('directives', [])
 								text.transition()
 									.duration(750)
 									.attr("y", function(d){
-										return getYPos(d)-5;
+										return getYPos(d);
 									})
 									.style("opacity", 1);
 								circles.transition()
@@ -405,7 +406,7 @@ angular.module('directives', [])
 								groups.transition()
 									.duration(750)
 									.attr("y", function(d){
-										return getYPos(d.input)-5;
+										return getYPos(d.input);
 									})
 									.style("opacity", 1);
 								removeSubtimeline();
@@ -567,7 +568,11 @@ angular.module('directives', [])
 	      			}
 
 	      			function getRadius(d){
-	      				return 20*(d.weight/largest)
+	      				var scale = d3.scale.log()
+								       .domain([1, largest])
+								       .range([5, 20]);
+						thing = scale;
+	      				return scale(d.weight);
 	      			}
 
 	      			function calculateStdDev(arr){
